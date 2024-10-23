@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'ui/accounts/login.dart';
+
 class HomePageState extends ChangeNotifier {
   int _selectedIndex = 0;
 
-  static final _pages = <Widget>[];
+  static final _pages = <Widget>[
+    const LoginPage(),
+    const LoginPage(),
+    const LoginPage(),
+    const LoginPage(),
+  ];
 
   int get selectedIndex => _selectedIndex;
   List<Widget> get pages => _pages;

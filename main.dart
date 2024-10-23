@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
-import 'ui/accounts/account_test_page.dart';
-import 'ui/screens.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'home.dart';
+import 'ui/accounts/account_manager.dart';
+import 'ui/accounts/login.dart';
 
-Future<void> main() async {
-// (1) Load the .env file
-  await dotenv.load();
-
+void main() {
   runApp(const MyApp());
 }
 
@@ -16,23 +14,34 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: Colors.indigo,
-      secondary: Colors.deepOrange,
-      background: Colors.white,
-      surfaceTint: Colors.grey[200],
-    );
-
-    return MultiProvider(
-      providers: [],
-      child: Consumer(builder: (ctx, authManager, child) {
-        return MaterialApp(
-          routes: {},
-          onGenerateRoute: (settings) {
-            return null;
+    return ChangeNotifierProvider(
+      create: (context) => AccountManager(),
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: FutureBuilder(
+          future: _checkLoginState(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            } else {
+              return snapshot.data == true
+                  ? const HomePage()
+                  : const LoginPage();
+            }
           },
-        );
-      }),
+        ),
+        routes: {
+          '/home': (context) => const HomePage(),
+        },
+      ),
     );
+  }
+
+  Future<bool> _checkLoginState() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.containsKey('userId');
   }
 }
