@@ -29,13 +29,15 @@ class Account {
     return Account(
       id: json['_id'],
       username: json['username'],
-      name: json['name'],
-      picture: json['picture'],
-      birthday: DateTime.parse(json['birthday']),
-      gender: json['gender'],
+      name: json['name'] ?? '',
+      picture: json['picture'] ?? '',
+      birthday: json['birthday'] != null
+          ? DateTime.parse(json['birthday'])
+          : DateTime.now(),
+      gender: json['gender'] ?? '',
       password: json['password'],
-      address: json['address'],
-      phonenumber: json['phonenumber'],
+      address: json['address'] ?? '',
+      phonenumber: json['phonenumber'] ?? '',
       email: json['email'],
       role: json['role'],
     );

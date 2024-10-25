@@ -2,76 +2,96 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:bcrypt/bcrypt.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'account_manager.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _RegisterPageState createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
 
-  Future<void> _login(BuildContext context) async {
+  Future<void> _register(BuildContext context) async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     final username = _usernameController.text;
+    final email = _emailController.text;
     final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    if (username.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Tất cả các trường đều bắt buộc';
+      });
+      return;
+    }
+
+    if (password != confirmPassword) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Mật khẩu không khớp';
+      });
+      return;
+    }
+
+    final hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
     final accountManager = Provider.of<AccountManager>(context, listen: false);
-    final account = await accountManager.login(username);
+    final accountData = {
+      'username': username,
+      'password': hashedPassword,
+      'email': email,
+      'role': 'client',
+      'birthday': DateTime(
+              DateTime.now().year, DateTime.now().month, DateTime.now().day)
+          .toIso8601String(),
+      'name': '',
+      'picture': '',
+      'gender': '',
+      'address': '',
+      'phonenumber': ''
+    };
 
-    setState(() {
-      _isLoading = false;
-    });
+    try {
+      final message = await accountManager.addAccount(accountData);
 
-    if (account != null && BCrypt.checkpw(password, account.password)) {
-      // Save login state
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('userId', account.id);
-      await prefs.setString('userRole', account.role);
+      setState(() {
+        _isLoading = false;
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Login successful!'),
+        SnackBar(
+          content: Text(message),
           duration: Duration(seconds: 2),
         ),
       );
 
-      Future.delayed(const Duration(seconds: 2), () {
-        Navigator.pushReplacementNamed(context, '/home');
-      });
-    } else {
+      if (message.contains('thành công')) {
+        Future.delayed(const Duration(seconds: 2), () {
+          Navigator.pushReplacementNamed(context, '/login');
+        });
+      }
+    } catch (error) {
       setState(() {
-        _errorMessage = 'Invalid username or password';
+        _isLoading = false;
+        _errorMessage = error.toString();
       });
     }
-  }
-
-  Future<void> _logout(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('userId');
-    await prefs.remove('userRole');
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Logged out successfully!'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pushReplacementNamed(context, '/login');
-    });
   }
 
   @override
@@ -95,7 +115,7 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      'Login',
+                      'Đăng ký',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -114,13 +134,24 @@ class _LoginPageState extends State<LoginPage> {
                           children: [
                             TextField(
                               controller: _usernameController,
+                              decoration: const InputDecoration(
+                                  labelText: 'Tên đăng nhập'),
+                            ),
+                            TextField(
+                              controller: _emailController,
                               decoration:
-                                  const InputDecoration(labelText: 'Username'),
+                                  const InputDecoration(labelText: 'Email'),
                             ),
                             TextField(
                               controller: _passwordController,
                               decoration:
-                                  const InputDecoration(labelText: 'Password'),
+                                  const InputDecoration(labelText: 'Mật khẩu'),
+                              obscureText: true,
+                            ),
+                            TextField(
+                              controller: _confirmPasswordController,
+                              decoration: const InputDecoration(
+                                  labelText: 'Xác nhận mật khẩu'),
                               obscureText: true,
                             ),
                             const SizedBox(height: 20),
@@ -128,8 +159,8 @@ class _LoginPageState extends State<LoginPage> {
                               const CircularProgressIndicator()
                             else
                               ElevatedButton(
-                                onPressed: () => _login(context),
-                                child: const Text('Login'),
+                                onPressed: () => _register(context),
+                                child: const Text('Đăng ký'),
                               ),
                             if (_errorMessage != null)
                               Padding(
@@ -139,21 +170,6 @@ class _LoginPageState extends State<LoginPage> {
                                   style: const TextStyle(color: Colors.red),
                                 ),
                               ),
-                            const SizedBox(height: 20),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/register');
-                              },
-                              child: const Text(
-                                'Don\'t have an account? Register',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            ElevatedButton(
-                              onPressed: () => _logout(context),
-                              child: const Text('Logout'),
-                            ),
                           ],
                         ),
                       ),

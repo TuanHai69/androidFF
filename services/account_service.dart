@@ -38,24 +38,27 @@ class AccountService {
     return accounts;
   }
 
-  Future<Account?> addAccount(Account account) async {
+  Future<String> addAccount(Map<String, dynamic> accountData) async {
     try {
-      print(account.birthday);
       final response = await http.post(
         Uri.parse(baseUrl),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(account.toJson()),
+        body: jsonEncode(accountData),
       );
+
       if (response.statusCode == 200) {
-        final newAccount = json.decode(response.body) as Map<String, dynamic>;
-        return Account.fromJson(newAccount);
+        final responseBody = json.decode(response.body) as Map<String, dynamic>;
+        return responseBody['message'] ?? 'Tài khoản đã được tạo thành công';
+      } else if (response.statusCode == 400) {
+        final errorResponse =
+            json.decode(response.body) as Map<String, dynamic>;
+        throw Exception(errorResponse['message']);
       } else {
-        print('Failed to add account: ${response.statusCode}');
+        throw Exception('Thêm tài khoản thất bại: ${response.statusCode}');
       }
     } catch (error) {
-      print('Error adding account: $error');
+      throw Exception('$error');
     }
-    return null;
   }
 
   Future<bool> updateAccount(Account account) async {

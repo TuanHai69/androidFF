@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'home.dart';
 import 'ui/accounts/account_manager.dart';
 import 'ui/accounts/login.dart';
+import 'ui/accounts/register.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,6 +36,8 @@ class MyApp extends StatelessWidget {
         ),
         routes: {
           '/home': (context) => const HomePage(),
+          '/login': (context) => const LoginPage(),
+          '/register': (context) => const RegisterPage(),
         },
       ),
     );

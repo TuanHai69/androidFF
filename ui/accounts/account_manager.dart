@@ -26,14 +26,14 @@ class AccountManager with ChangeNotifier {
     return _accounts.length;
   }
 
-  Future<Account?> addAccount(Account account) async {
-    print(account.address);
-    final newAccount = await _accountService.addAccount(account);
-    if (newAccount != null) {
-      _accounts.add(newAccount);
+  Future<String> addAccount(Map<String, dynamic> accountData) async {
+    try {
+      final message = await _accountService.addAccount(accountData);
       notifyListeners();
+      return message;
+    } catch (error) {
+      return '$error';
     }
-    return newAccount;
   }
 
   Account? get account {
