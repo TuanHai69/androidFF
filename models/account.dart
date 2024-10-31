@@ -3,7 +3,7 @@ class Account {
   final String username;
   final String name;
   final String picture;
-  final DateTime birthday;
+  final String birthday;
   final String gender;
   final String password;
   final String address;
@@ -31,9 +31,7 @@ class Account {
       username: json['username'],
       name: json['name'] ?? '',
       picture: json['picture'] ?? '',
-      birthday: json['birthday'] != null
-          ? DateTime.parse(json['birthday'])
-          : DateTime.now(),
+      birthday: json['birthday'] ?? '',
       gender: json['gender'] ?? '',
       password: json['password'],
       address: json['address'] ?? '',
@@ -49,7 +47,7 @@ class Account {
       'username': username,
       'name': name,
       'picture': picture,
-      'birthday': birthday.toIso8601String(),
+      'birthday': birthday,
       'gender': gender,
       'password': password,
       'address': address,
@@ -64,7 +62,7 @@ class Account {
     String? username,
     String? name,
     String? picture,
-    DateTime? birthday,
+    String? birthday,
     String? gender,
     String? password,
     String? address,

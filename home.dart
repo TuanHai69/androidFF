@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/ui/accounts/account_screen.dart';
+import 'package:flutter_application_1/ui/carts/cart_screen.dart';
 import 'package:provider/provider.dart';
-
-import 'ui/accounts/login.dart';
+import 'ui/stores/store_screen.dart';
+import 'ui/products/product_screen.dart';
 
 class HomePageState extends ChangeNotifier {
   int _selectedIndex = 0;
 
   static final _pages = <Widget>[
-    const LoginPage(),
-    const LoginPage(),
-    const LoginPage(),
-    const LoginPage(),
+    const StoreScreen(), // Thay thế LoginPage bằng StoreScreen
+    const ProductScreen(),
+    const CartScreen(),
+    const AccountScreen(),
   ];
 
   int get selectedIndex => _selectedIndex;

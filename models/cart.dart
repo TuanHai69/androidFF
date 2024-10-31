@@ -4,7 +4,7 @@ class Cart {
   final String productid;
   final int count;
   final String note;
-  final double discount;
+  final int discount;
   final String storeid;
   final String state;
 
@@ -21,14 +21,14 @@ class Cart {
 
   factory Cart.fromJson(Map<String, dynamic> json) {
     return Cart(
-      id: json['_id'],
-      userid: json['userid'],
-      productid: json['productid'],
-      count: json['count'],
-      note: json['note'],
-      discount: json['discount'],
-      storeid: json['storeid'],
-      state: json['state'],
+      id: json['_id'] ?? '',
+      userid: json['userid'] ?? '',
+      productid: json['productid'] ?? '',
+      count: _parseInt(json['count'] ?? 0),
+      note: json['note'] ?? '',
+      discount: _parseInt(json['discount'] ?? 0),
+      storeid: json['storeid'] ?? '',
+      state: json['state'] ?? '',
     );
   }
 
@@ -51,7 +51,7 @@ class Cart {
     String? productid,
     int? count,
     String? note,
-    double? discount,
+    int? discount,
     String? storeid,
     String? state,
   }) {
@@ -65,5 +65,15 @@ class Cart {
       storeid: storeid ?? this.storeid,
       state: state ?? this.state,
     );
+  }
+
+  static int _parseInt(dynamic value) {
+    if (value is int) {
+      return value;
+    } else if (value is String) {
+      return int.tryParse(value) ?? 0;
+    } else {
+      return 0;
+    }
   }
 }

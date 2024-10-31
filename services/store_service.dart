@@ -85,23 +85,26 @@ class StoreService {
     return stores;
   }
 
-  Future<Store?> addStore(Store store) async {
+  Future<String> addStore(Map<String, dynamic> storeData) async {
     try {
       final response = await http.post(
         Uri.parse(baseUrl),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(store.toJson()),
+        body: jsonEncode(storeData),
       );
       if (response.statusCode == 200) {
-        final newStore = json.decode(response.body) as Map<String, dynamic>;
-        return Store.fromJson(newStore);
+        final responseBody = json.decode(response.body) as Map<String, dynamic>;
+        return responseBody['message'] ?? 'Store added successfully';
+      } else if (response.statusCode == 400) {
+        final errorResponse =
+            json.decode(response.body) as Map<String, dynamic>;
+        throw Exception(errorResponse['message']);
       } else {
-        print('Failed to add store: ${response.statusCode}');
+        throw Exception('Failed to add store: ${response.statusCode}');
       }
     } catch (error) {
-      print('Error adding store: $error');
+      throw Exception('Error adding store: $error');
     }
-    return null;
   }
 
   Future<bool> updateStore(Store store) async {

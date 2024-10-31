@@ -57,23 +57,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _logout(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('userId');
-    await prefs.remove('userRole');
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Logged out successfully!'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pushReplacementNamed(context, '/login');
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -146,13 +129,8 @@ class _LoginPageState extends State<LoginPage> {
                               },
                               child: const Text(
                                 'Don\'t have an account? Register',
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(color: Colors.black),
                               ),
-                            ),
-                            const SizedBox(height: 20),
-                            ElevatedButton(
-                              onPressed: () => _logout(context),
-                              child: const Text('Logout'),
                             ),
                           ],
                         ),

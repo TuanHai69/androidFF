@@ -1,14 +1,14 @@
 class Product {
   final String id;
   final String name;
-  final double cost;
+  final int cost;
   final String picture;
   final String material;
   final String size;
   final String description;
   final String warranty;
   final String delivery;
-  final double discount;
+  final int discount;
   final String storeid;
   final String state;
   final int count;
@@ -33,17 +33,17 @@ class Product {
     return Product(
       id: json['_id'],
       name: json['name'],
-      cost: json['cost'],
+      cost: _parseInt(json['cost']),
       picture: json['picture'],
       material: json['material'],
       size: json['size'],
       description: json['description'],
       warranty: json['warranty'],
       delivery: json['delivery'],
-      discount: json['discount'],
+      discount: _parseInt(json['discount']),
       storeid: json['storeid'],
       state: json['state'],
-      count: json['count'],
+      count: _parseInt(json['count']),
     );
   }
 
@@ -68,14 +68,14 @@ class Product {
   Product copyWith({
     String? id,
     String? name,
-    double? cost,
+    int? cost,
     String? picture,
     String? material,
     String? size,
     String? description,
     String? warranty,
     String? delivery,
-    double? discount,
+    int? discount,
     String? storeid,
     String? state,
     int? count,
@@ -95,5 +95,15 @@ class Product {
       state: state ?? this.state,
       count: count ?? this.count,
     );
+  }
+
+  static int _parseInt(dynamic value) {
+    if (value is int) {
+      return value;
+    } else if (value is String) {
+      return int.tryParse(value) ?? 0;
+    } else {
+      return 0;
+    }
   }
 }

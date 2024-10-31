@@ -5,6 +5,9 @@ import 'home.dart';
 import 'ui/accounts/account_manager.dart';
 import 'ui/accounts/login.dart';
 import 'ui/accounts/register.dart';
+import 'ui/carts/cart_manager.dart';
+import 'ui/products/product_manager.dart';
+import 'ui/stores/store_manager.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,9 +18,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => AccountManager(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AccountManager()),
+        ChangeNotifierProvider(create: (context) => StoreManager()),
+        ChangeNotifierProvider(create: (context) => ProductManager()),
+        ChangeNotifierProvider(create: (context) => CartManager()),
+      ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
         theme: ThemeData(
           primarySwatch: Colors.blue,
