@@ -81,76 +81,74 @@ class _CartScreenState extends State<CartScreen> {
                     return Container(
                       margin: const EdgeInsets.symmetric(
                           vertical: 10, horizontal: 15),
-                      child: Row(
+                      child: Stack(
                         children: [
-                          Expanded(
-                            flex: 2,
-                            child: Stack(
+                          Container(
+                            height: MediaQuery.of(context).size.height / 4,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              image: DecorationImage(
+                                image:
+                                    MemoryImage(base64Decode(product.picture)),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            height: MediaQuery.of(context).size.height / 4,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [
+                                  Colors.black.withOpacity(0.7),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 10,
+                            left: 10,
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width * 2 / 3,
+                              child: _buildMarqueeOrText(
+                                  product.name, 24, FontWeight.bold),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 10,
+                            left: 10,
+                            right: MediaQuery.of(context).size.width / 3,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  height:
-                                      MediaQuery.of(context).size.height / 4,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(15),
-                                    image: DecorationImage(
-                                      image: MemoryImage(
-                                          base64Decode(product.picture)),
-                                      fit: BoxFit.cover,
-                                    ),
+                                _buildPriceText(product),
+                                const SizedBox(height: 5),
+                                Text(
+                                  'Số lượng: ${cart.count}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
                                   ),
                                 ),
-                                Container(
-                                  height:
-                                      MediaQuery.of(context).size.height / 4,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(15),
-                                    gradient: LinearGradient(
-                                      begin: Alignment.bottomCenter,
-                                      end: Alignment.topCenter,
-                                      colors: [
-                                        Colors.black.withOpacity(0.7),
-                                        Colors.transparent,
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: 10,
-                                  left: 10,
-                                  right: 10,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      _buildMarqueeOrText(
-                                          product.name, 24, FontWeight.bold),
-                                      const SizedBox(height: 5),
-                                      _buildPriceText(product),
-                                      const SizedBox(height: 5),
-                                      Text(
-                                        'Số lượng: ${cart.count}',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 5),
-                                      Text(
-                                        'Tổng tiền: ${formatCurrency(totalPrice.toInt())}',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ],
+                                const SizedBox(height: 5),
+                                Text(
+                                  'Tổng tiền: ${formatCurrency(totalPrice.toInt())}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            flex: 1,
+                          Positioned(
+                            bottom: 10,
+                            right: 10,
                             child: Column(
                               children: [
                                 ElevatedButton(
@@ -158,7 +156,7 @@ class _CartScreenState extends State<CartScreen> {
                                     // Xử lý thanh toán
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
+                                    backgroundColor: Colors.blue,
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 15),
                                     shape: RoundedRectangleBorder(
@@ -167,7 +165,8 @@ class _CartScreenState extends State<CartScreen> {
                                   ),
                                   child: const Text(
                                     'Thanh toán',
-                                    style: TextStyle(fontSize: 16),
+                                    style: TextStyle(
+                                        fontSize: 16, color: Colors.white),
                                   ),
                                 ),
                                 const SizedBox(height: 10),
@@ -218,6 +217,7 @@ class _CartScreenState extends State<CartScreen> {
       {TextDecoration? textDecoration}) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth * 2 / 3;
         final textPainter = TextPainter(
           text: TextSpan(
             text: text,
@@ -229,7 +229,7 @@ class _CartScreenState extends State<CartScreen> {
           ),
           maxLines: 1,
           textDirection: TextDirection.ltr,
-        )..layout(minWidth: 0, maxWidth: constraints.maxWidth);
+        )..layout(minWidth: 0, maxWidth: maxWidth);
 
         if (textPainter.didExceedMaxLines) {
           return SizedBox(

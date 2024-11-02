@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:marquee/marquee.dart';
 import 'store_manager.dart';
+import 'store_detail.dart'; // Import StoreDetailScreen
 
 class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key});
@@ -37,66 +38,79 @@ class _StoreScreenState extends State<StoreScreen> {
               itemCount: storeManager.storeCount,
               itemBuilder: (context, index) {
                 final store = storeManager.stores[index];
-                return Container(
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                  child: Stack(
-                    children: [
-                      Container(
-                        height: MediaQuery.of(context).size.height / 3,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                          image: DecorationImage(
-                            image: MemoryImage(base64Decode(store.picture)),
-                            fit: BoxFit.cover,
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StoreDetailScreen(store: store),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 15),
+                    child: Stack(
+                      children: [
+                        Container(
+                          height: MediaQuery.of(context).size.height / 3,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15),
+                            image: DecorationImage(
+                              image: MemoryImage(base64Decode(store.picture)),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
-                      ),
-                      Container(
-                        height: MediaQuery.of(context).size.height / 3,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                          gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                            colors: [
-                              Colors.black.withOpacity(0.7),
-                              Colors.transparent,
+                        Container(
+                          height: MediaQuery.of(context).size.height / 3,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15),
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                Colors.black.withOpacity(0.7),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 10,
+                          left: 10,
+                          right: 10,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildMarqueeOrText(
+                                  store.name, 24, FontWeight.bold),
+                              const SizedBox(height: 5),
+                              _buildMarqueeOrText(
+                                  store.address, 16, FontWeight.normal),
+                              const SizedBox(height: 5),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: _buildMarqueeOrText(
+                                        store.phonenumber,
+                                        16,
+                                        FontWeight.normal),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: _buildMarqueeOrText(
+                                        store.opentime, 16, FontWeight.normal),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ),
-                      ),
-                      Positioned(
-                        bottom: 10,
-                        left: 10,
-                        right: 10,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildMarqueeOrText(
-                                store.name, 24, FontWeight.bold),
-                            const SizedBox(height: 5),
-                            _buildMarqueeOrText(
-                                store.address, 16, FontWeight.normal),
-                            const SizedBox(height: 5),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: _buildMarqueeOrText(
-                                      store.phonenumber, 16, FontWeight.normal),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: _buildMarqueeOrText(
-                                      store.opentime, 16, FontWeight.normal),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
