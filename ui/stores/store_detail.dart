@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../models/store.dart';
 import 'store_product_list.dart';
+import 'commentstore_card.dart';
 
 class StoreDetailScreen extends StatelessWidget {
   final Store store;
@@ -70,6 +71,12 @@ class StoreDetailScreen extends StatelessWidget {
             ),
             StoreProductListScreen(
                 storeId: store.id), // Use StoreProductListScreen
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text('Đánh giá cửa hàng',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            ),
+            CommentStoreCard(storeId: store.id), // Use CommentStoreCard
           ],
         ),
       ),

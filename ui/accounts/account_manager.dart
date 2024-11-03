@@ -10,9 +10,7 @@ class AccountManager with ChangeNotifier {
   final AccountService _accountService = AccountService();
 
   Future<Account?> fetchAccount(String id) async {
-    print(id);
     _account = await _accountService.fetchAccount(id);
-    print(_account);
     notifyListeners();
     return _account;
   }
