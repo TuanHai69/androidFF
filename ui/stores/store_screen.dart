@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:marquee/marquee.dart';
 import 'store_manager.dart';
 import 'store_detail.dart'; // Import StoreDetailScreen
+import 'commentstore_manager.dart'; // Import CommentStoreManager
 
 class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key});
@@ -13,6 +14,8 @@ class StoreScreen extends StatefulWidget {
 }
 
 class _StoreScreenState extends State<StoreScreen> {
+  final Map<String, double> _averageRatings = {};
+
   @override
   void initState() {
     super.initState();
@@ -22,6 +25,30 @@ class _StoreScreenState extends State<StoreScreen> {
   Future<void> _fetchStores() async {
     final storeManager = Provider.of<StoreManager>(context, listen: false);
     await storeManager.fetchAllStores();
+    _fetchCommentsForStores();
+  }
+
+  Future<void> _fetchCommentsForStores() async {
+    final commentStoreManager =
+        Provider.of<CommentStoreManager>(context, listen: false);
+    final storeManager = Provider.of<StoreManager>(context, listen: false);
+
+    for (var store in storeManager.stores) {
+      await commentStoreManager.fetchCommentStoresByStore(store.id);
+      final comments = commentStoreManager.commentStores;
+      if (comments.isNotEmpty) {
+        final averageRating =
+            comments.map((c) => c.rate).reduce((a, b) => a + b) /
+                comments.length;
+        setState(() {
+          _averageRatings[store.id] = averageRating;
+        });
+      } else {
+        setState(() {
+          _averageRatings[store.id] = 0.0;
+        });
+      }
+    }
   }
 
   @override
@@ -38,6 +65,8 @@ class _StoreScreenState extends State<StoreScreen> {
               itemCount: storeManager.storeCount,
               itemBuilder: (context, index) {
                 final store = storeManager.stores[index];
+                final averageRating = _averageRatings[store.id] ?? 0.0;
+
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -74,6 +103,24 @@ class _StoreScreenState extends State<StoreScreen> {
                                 Colors.transparent,
                               ],
                             ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Row(
+                            children: List.generate(5, (index) {
+                              if (index < averageRating.floor()) {
+                                return const Icon(Icons.star,
+                                    color: Colors.amber, size: 20);
+                              } else if (index < averageRating) {
+                                return const Icon(Icons.star_half,
+                                    color: Colors.amber, size: 20);
+                              } else {
+                                return const Icon(Icons.star_border,
+                                    color: Colors.amber, size: 20);
+                              }
+                            }),
                           ),
                         ),
                         Positioned(
@@ -124,8 +171,9 @@ class _StoreScreenState extends State<StoreScreen> {
       builder: (context, constraints) {
         final textPainter = TextPainter(
           text: TextSpan(
-              text: text,
-              style: TextStyle(fontSize: fontSize, fontWeight: fontWeight)),
+            text: text,
+            style: TextStyle(fontSize: fontSize, fontWeight: fontWeight),
+          ),
           maxLines: 1,
           textDirection: TextDirection.ltr,
         )..layout(minWidth: 0, maxWidth: constraints.maxWidth);
@@ -136,9 +184,10 @@ class _StoreScreenState extends State<StoreScreen> {
             child: Marquee(
               text: text,
               style: TextStyle(
-                  color: Colors.white,
-                  fontSize: fontSize,
-                  fontWeight: fontWeight),
+                color: Colors.white,
+                fontSize: fontSize,
+                fontWeight: fontWeight,
+              ),
               scrollAxis: Axis.horizontal,
               blankSpace: 20.0,
               velocity: 50.0,
@@ -154,9 +203,10 @@ class _StoreScreenState extends State<StoreScreen> {
           return Text(
             text,
             style: TextStyle(
-                color: Colors.white,
-                fontSize: fontSize,
-                fontWeight: fontWeight),
+              color: Colors.white,
+              fontSize: fontSize,
+              fontWeight: fontWeight,
+            ),
           );
         }
       },

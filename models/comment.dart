@@ -5,6 +5,8 @@ class Comment {
   final int rate;
   final String comment;
   final String state;
+  final String? name; // Nullable
+  final String? picture; // Nullable
 
   Comment({
     required this.id,
@@ -13,6 +15,8 @@ class Comment {
     required this.rate,
     required this.comment,
     required this.state,
+    this.name,
+    this.picture,
   });
 
   factory Comment.fromJson(Map<String, dynamic> json) {
@@ -20,9 +24,11 @@ class Comment {
       id: json['_id'],
       userid: json['userid'],
       productid: json['productid'],
-      rate: json['rate'],
+      rate: _parseInt(json['rate']),
       comment: json['comment'],
       state: json['state'],
+      name: json['name'],
+      picture: json['picture'],
     );
   }
 
@@ -34,6 +40,8 @@ class Comment {
       'rate': rate,
       'comment': comment,
       'state': state,
+      'name': name,
+      'picture': picture,
     };
   }
 
@@ -44,6 +52,8 @@ class Comment {
     int? rate,
     String? comment,
     String? state,
+    String? name,
+    String? picture,
   }) {
     return Comment(
       id: id ?? this.id,
@@ -52,6 +62,18 @@ class Comment {
       rate: rate ?? this.rate,
       comment: comment ?? this.comment,
       state: state ?? this.state,
+      name: name ?? this.name,
+      picture: picture ?? this.picture,
     );
+  }
+
+  static int _parseInt(dynamic value) {
+    if (value is int) {
+      return value;
+    } else if (value is String) {
+      return int.tryParse(value) ?? 0;
+    } else {
+      return 0;
+    }
   }
 }

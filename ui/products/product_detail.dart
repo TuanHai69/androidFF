@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../models/product.dart';
+import 'comment_card.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final Product product;
 
-  const ProductDetailScreen({Key? key, required this.product})
-      : super(key: key);
+  const ProductDetailScreen({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +75,12 @@ class ProductDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text('Đánh giá sản phẩm',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            ),
+            CommentCard(productId: product.id), // Use CommentCard
           ],
         ),
       ),

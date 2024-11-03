@@ -4,7 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:marquee/marquee.dart';
 import 'product_manager.dart';
 import '../../models/product.dart';
-import 'product_detail.dart'; // Import ProductDetailScreen
+import 'product_detail.dart';
+import 'comment_manager.dart';
 
 class ProductScreen extends StatefulWidget {
   const ProductScreen({super.key});
@@ -14,6 +15,8 @@ class ProductScreen extends StatefulWidget {
 }
 
 class _ProductScreenState extends State<ProductScreen> {
+  final Map<String, double> _averageRatings = {};
+
   @override
   void initState() {
     super.initState();
@@ -23,6 +26,30 @@ class _ProductScreenState extends State<ProductScreen> {
   Future<void> _fetchProducts() async {
     final productManager = Provider.of<ProductManager>(context, listen: false);
     await productManager.fetchAllProducts();
+    _fetchCommentsForProducts();
+  }
+
+  Future<void> _fetchCommentsForProducts() async {
+    final commentManager = Provider.of<CommentManager>(context, listen: false);
+    final productManager = Provider.of<ProductManager>(context, listen: false);
+
+    for (var product in productManager.products) {
+      await commentManager.fetchCommentsByProduct(product.id);
+      final comments = commentManager.comments;
+
+      if (comments.isNotEmpty) {
+        final averageRating =
+            comments.map((c) => c.rate).reduce((a, b) => a + b) /
+                comments.length;
+        setState(() {
+          _averageRatings[product.id] = averageRating;
+        });
+      } else {
+        setState(() {
+          _averageRatings[product.id] = 0.0;
+        });
+      }
+    }
   }
 
   @override
@@ -39,6 +66,8 @@ class _ProductScreenState extends State<ProductScreen> {
               itemCount: productManager.productCount,
               itemBuilder: (context, index) {
                 final product = productManager.products[index];
+                final averageRating = _averageRatings[product.id] ?? 0.0;
+
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -76,6 +105,24 @@ class _ProductScreenState extends State<ProductScreen> {
                                 Colors.transparent,
                               ],
                             ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Row(
+                            children: List.generate(5, (index) {
+                              if (index < averageRating.floor()) {
+                                return const Icon(Icons.star,
+                                    color: Colors.amber, size: 20);
+                              } else if (index < averageRating) {
+                                return const Icon(Icons.star_half,
+                                    color: Colors.amber, size: 20);
+                              } else {
+                                return const Icon(Icons.star_border,
+                                    color: Colors.amber, size: 20);
+                              }
+                            }),
                           ),
                         ),
                         Positioned(

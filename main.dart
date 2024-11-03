@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/ui/products/comment_manager.dart';
 import 'ui/stores/commentstore_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => ProductManager()),
         ChangeNotifierProvider(create: (context) => CartManager()),
         ChangeNotifierProvider(create: (context) => CommentStoreManager()),
+        ChangeNotifierProvider(create: (context) => CommentManager()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
