@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'account_manager.dart';
 import '../../models/account.dart';
+import 'edit_information.dart';
+import 'information.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -108,11 +110,29 @@ class _AccountScreenState extends State<AccountScreen> {
                         // Xử lý đổi mật khẩu
                       }),
                       _buildActionButton('Thông tin cá nhân', Icons.info, () {
-                        // Xử lý thông tin cá nhân
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                InformationScreen(account: _account!),
+                          ),
+                        );
                       }),
                       _buildActionButton(
-                          'Chỉnh sửa thông tin cá nhân', Icons.edit, () {
-                        // Xử lý chỉnh sửa thông tin cá nhân
+                          'Chỉnh sửa thông tin cá nhân', Icons.edit, () async {
+                        final updatedAccount = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                EditInformationScreen(account: _account!),
+                          ),
+                        );
+
+                        if (updatedAccount != null) {
+                          setState(() {
+                            _account = updatedAccount;
+                          });
+                        }
                       }),
                       _buildActionButton(
                           'Cập nhật ảnh đại diện', Icons.camera_alt, () {

@@ -40,15 +40,24 @@ class _StoreScreenState extends State<StoreScreen> {
         final averageRating =
             comments.map((c) => c.rate).reduce((a, b) => a + b) /
                 comments.length;
-        setState(() {
-          _averageRatings[store.id] = averageRating;
-        });
+        if (mounted) {
+          setState(() {
+            _averageRatings[store.id] = averageRating;
+          });
+        }
       } else {
-        setState(() {
-          _averageRatings[store.id] = 0.0;
-        });
+        if (mounted) {
+          setState(() {
+            _averageRatings[store.id] = 0.0;
+          });
+        }
       }
     }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override

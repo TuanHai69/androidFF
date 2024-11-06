@@ -30,14 +30,19 @@ class CommentStoreManager with ChangeNotifier {
   Future<void> fetchCommentStoresByStore(String storeid) async {
     _commentStores =
         await _commentStoreService.fetchCommentStoresByStore(storeid);
-    for (var i = 0; i < _commentStores.length; i++) {
-      final account =
-          await _accountService.fetchAccount(_commentStores[i].userid);
-      _commentStores[i] = _commentStores[i].copyWith(
-        name: account?.name,
-        picture: account?.picture,
-      );
+    if (_commentStores.isNotEmpty) {
+      for (var i = 0; i < _commentStores.length; i++) {
+        final account =
+            await _accountService.fetchAccount(_commentStores[i].userid);
+        _commentStores[i] = _commentStores[i].copyWith(
+          name: account?.name,
+          picture: account?.picture,
+        );
+      }
+    } else {
+      print('No comments found for store: $storeid');
     }
+
     notifyListeners();
   }
 
