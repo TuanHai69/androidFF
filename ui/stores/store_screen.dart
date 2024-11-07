@@ -15,6 +15,7 @@ class StoreScreen extends StatefulWidget {
 
 class _StoreScreenState extends State<StoreScreen> {
   final Map<String, double> _averageRatings = {};
+  bool _isFetching = false;
 
   @override
   void initState() {
@@ -29,13 +30,18 @@ class _StoreScreenState extends State<StoreScreen> {
   }
 
   Future<void> _fetchCommentsForStores() async {
+    if (_isFetching) return;
+    _isFetching = true;
+
     final commentStoreManager =
         Provider.of<CommentStoreManager>(context, listen: false);
     final storeManager = Provider.of<StoreManager>(context, listen: false);
 
     for (var store in storeManager.stores) {
+      if (!mounted) return;
       await commentStoreManager.fetchCommentStoresByStore(store.id);
       final comments = commentStoreManager.commentStores;
+
       if (comments.isNotEmpty) {
         final averageRating =
             comments.map((c) => c.rate).reduce((a, b) => a + b) /
@@ -53,10 +59,13 @@ class _StoreScreenState extends State<StoreScreen> {
         }
       }
     }
+
+    _isFetching = false;
   }
 
   @override
   void dispose() {
+    _isFetching = false;
     super.dispose();
   }
 
