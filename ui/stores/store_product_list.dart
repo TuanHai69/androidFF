@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:marquee/marquee.dart';
+import '../products/comment_manager.dart';
 import '../products/product_manager.dart';
 import '../../models/product.dart';
-import '../products/product_detail.dart'; // Import ProductDetailScreen
+import '../products/product_detail.dart';
 
 class StoreProductListScreen extends StatefulWidget {
   final String storeId;
@@ -16,6 +17,8 @@ class StoreProductListScreen extends StatefulWidget {
 }
 
 class _StoreProductListScreenState extends State<StoreProductListScreen> {
+  final Map<String, double> _averageRatings = {};
+
   @override
   void initState() {
     super.initState();
@@ -25,6 +28,34 @@ class _StoreProductListScreenState extends State<StoreProductListScreen> {
   Future<void> _fetchProductsByStore() async {
     final productManager = Provider.of<ProductManager>(context, listen: false);
     await productManager.fetchProductsByStore(widget.storeId);
+    _fetchCommentsForProducts();
+  }
+
+  Future<void> _fetchCommentsForProducts() async {
+    final commentManager = Provider.of<CommentManager>(context, listen: false);
+    final productManager = Provider.of<ProductManager>(context, listen: false);
+
+    for (var product in productManager.products) {
+      await commentManager.fetchCommentsByProduct(product.id);
+      final comments = commentManager.comments;
+
+      if (comments.isNotEmpty) {
+        final averageRating =
+            comments.map((c) => c.rate).reduce((a, b) => a + b) /
+                comments.length;
+        if (mounted) {
+          setState(() {
+            _averageRatings[product.id] = averageRating;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _averageRatings[product.id] = 0.0;
+          });
+        }
+      }
+    }
   }
 
   @override
@@ -39,6 +70,8 @@ class _StoreProductListScreenState extends State<StoreProductListScreen> {
             itemCount: productManager.productCount,
             itemBuilder: (context, index) {
               final product = productManager.products[index];
+              final averageRating = _averageRatings[product.id] ?? 0.0;
+
               return GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -78,6 +111,44 @@ class _StoreProductListScreenState extends State<StoreProductListScreen> {
                           ),
                         ),
                       ),
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: Row(
+                          children: List.generate(5, (index) {
+                            if (index < averageRating.floor()) {
+                              return const Icon(Icons.star,
+                                  color: Colors.amber, size: 20);
+                            } else if (index < averageRating) {
+                              return const Icon(Icons.star_half,
+                                  color: Colors.amber, size: 20);
+                            } else {
+                              return const Icon(Icons.star_border,
+                                  color: Colors.amber, size: 20);
+                            }
+                          }),
+                        ),
+                      ),
+                      if (product.discount > 0)
+                        Positioned(
+                          top: 10,
+                          left: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Text(
+                              '${product.discount}% OFF',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
                       Positioned(
                         bottom: 10,
                         left: 10,
@@ -143,8 +214,11 @@ class _StoreProductListScreenState extends State<StoreProductListScreen> {
   }
 
   Widget _buildMarqueeOrText(
-      String text, double fontSize, FontWeight fontWeight,
-      {TextDecoration? textDecoration}) {
+    String text,
+    double fontSize,
+    FontWeight fontWeight, {
+    TextDecoration? textDecoration,
+  }) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final textPainter = TextPainter(

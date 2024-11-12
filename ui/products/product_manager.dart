@@ -1,34 +1,58 @@
 import 'package:flutter/material.dart';
 import '../../models/product.dart';
 import '../../services/product_service.dart';
+import '../../services/price_service.dart';
 
 class ProductManager with ChangeNotifier {
   Product? _product;
   List<Product> _products = [];
-
   final ProductService _productService = ProductService();
+  final PriceService _priceService = PriceService();
 
   Future<Product?> fetchProduct(String id) async {
-    print(id);
     _product = await _productService.fetchProduct(id);
-    print(_product);
+    if (_product != null) {
+      _product = await _fetchAndSetPrice(_product!);
+    }
     notifyListeners();
     return _product;
   }
 
   Future<void> fetchAllProducts() async {
     _products = await _productService.fetchAllProducts();
+    for (int i = 0; i < _products.length; i++) {
+      _products[i] = await _fetchAndSetPrice(_products[i]);
+    }
     notifyListeners();
   }
 
   Future<void> fetchProductsByStore(String storeid) async {
     _products = await _productService.fetchProductsByStore(storeid);
+    for (int i = 0; i < _products.length; i++) {
+      _products[i] = await _fetchAndSetPrice(_products[i]);
+    }
     notifyListeners();
   }
 
   Future<void> fetchProductsByState(String state) async {
     _products = await _productService.fetchProductsByState(state);
+    for (int i = 0; i < _products.length; i++) {
+      _products[i] = await _fetchAndSetPrice(_products[i]);
+    }
     notifyListeners();
+  }
+
+  Future<Product> _fetchAndSetPrice(Product product) async {
+    final prices =
+        await _priceService.fetchPricesByProductWithNoEndDate(product.id);
+    if (prices.isNotEmpty) {
+      final latestPrice = prices.first;
+      return product.copyWith(
+        cost: latestPrice.price,
+        discount: latestPrice.discount,
+      );
+    }
+    return product;
   }
 
   int get productCount {

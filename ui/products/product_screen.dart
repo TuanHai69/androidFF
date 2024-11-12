@@ -134,6 +134,26 @@ class _ProductScreenState extends State<ProductScreen> {
                             }),
                           ),
                         ),
+                        if (product.discount > 0)
+                          Positioned(
+                            top: 10,
+                            left: 10,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: Text(
+                                '${product.discount}% OFF',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
                         Positioned(
                           bottom: 10,
                           left: 10,
