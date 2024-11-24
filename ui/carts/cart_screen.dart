@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/services/socketio.service.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:marquee/marquee.dart';
@@ -19,11 +20,27 @@ class _CartScreenState extends State<CartScreen> {
   List<Cart> _carts = [];
   Map<String, Product> _products = {};
   bool _isLoading = true;
-
+  final SocketService socketService = SocketService();
   @override
   void initState() {
     super.initState();
+    socketService.connect();
     _fetchCarts();
+    socketService.on('createCart', (data) async {
+      if (mounted) {
+        await _fetchCarts();
+      }
+    });
+    socketService.on('deleteCart', (data) async {
+      if (mounted) {
+        await _fetchCarts();
+      }
+    });
+    socketService.on('updateCart', (data) async {
+      if (mounted) {
+        await _fetchCarts();
+      }
+    });
   }
 
   Future<void> _fetchCarts() async {
