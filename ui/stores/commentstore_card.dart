@@ -43,6 +43,18 @@ class _CommentStoreCardState extends State<CommentStoreCard> {
         Provider.of<CommentStoreManager>(context, listen: false);
     await commentStoreManager.fetchCommentStoresByStore(widget.storeId);
 
+    _existingComment = commentStoreManager.commentStores
+        .firstWhere((comment) => comment.userid == userId,
+            orElse: () => CommentStore(
+                  id: '',
+                  userid: userId,
+                  storeid: widget.storeId,
+                  rate: _rating,
+                  commentstore: _comment,
+                  state: 'show',
+                  isliked: false,
+                ));
+
     final existingComments = commentStoreManager.commentStores.where((comment) {
       return comment.userid == userId && comment.state != 'Nopay';
     }).toList();
@@ -82,39 +94,6 @@ class _CommentStoreCardState extends State<CommentStoreCard> {
     await commentStoreManager.fetchCommentStoresByStore(widget.storeId);
   }
 
-  // Future<void> _fetchUserComments() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final userId = prefs.getString('userId');
-  //   if (userId == null) {
-  //     return; // Không có userId, không thể tiếp tục
-  //   }
-  //   final commentStoreManager =
-  //       Provider.of<CommentStoreManager>(context, listen: false);
-
-  //   await commentStoreManager.fetchCommentStoresByUser(userId);
-  //   final userComments = commentStoreManager.commentStores;
-
-  //   setState(() {
-  //     _existingComment = userComments.firstWhere(
-  //       (comment) => comment.storeid == widget.storeId,
-  //       orElse: () => CommentStore(
-  //         id: '',
-  //         userid: userId,
-  //         storeid: widget.storeId,
-  //         rate: 0,
-  //         commentstore: '',
-  //         state: 'Nopay',
-  //         isliked: false,
-  //       ),
-  //     );
-  //     if (_existingComment != null) {
-  //       _rating = _existingComment!.rate;
-  //       _comment = _existingComment!.commentstore;
-  //     }
-  //   });
-  //   await commentStoreManager.fetchCommentStoresByStore(widget.storeId);
-  // }
-
   Future<void> _submitComment() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -128,7 +107,7 @@ class _CommentStoreCardState extends State<CommentStoreCard> {
     final commentStoreManager =
         Provider.of<CommentStoreManager>(context, listen: false);
 
-    if (_existingComment == null) {
+    if (_existingComment?.id == "") {
       // Thêm mới commentstore
       await commentStoreManager.addCommentStore(CommentStore(
         id: '',
@@ -147,6 +126,7 @@ class _CommentStoreCardState extends State<CommentStoreCard> {
         state: 'show',
       ));
     }
+    _canSubmitReview = false;
     _fetchComments(); // Cập nhật danh sách commentstore sau khi thêm hoặc cập nhật
   }
 

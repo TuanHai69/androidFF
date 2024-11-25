@@ -9,9 +9,7 @@ class CartManager with ChangeNotifier {
   final CartService _cartService = CartService();
 
   Future<Cart?> fetchCart(String id) async {
-    print(id);
     _cart = await _cartService.fetchCart(id);
-    print(_cart);
     notifyListeners();
     return _cart;
   }

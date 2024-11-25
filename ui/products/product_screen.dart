@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:marquee/marquee.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../models/cart.dart';
+import '../carts/cart_manager.dart';
 import 'product_manager.dart';
 import '../../models/product.dart';
 import 'product_detail.dart';
@@ -54,6 +57,76 @@ class _ProductScreenState extends State<ProductScreen> {
         }
       }
     }
+  }
+
+  Future<void> _addToCart(Product product) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
+
+    if (userId == null) {
+      _showMessage('Không có userId, không thể tiếp tục');
+      return;
+    }
+
+    final productManager = Provider.of<ProductManager>(context, listen: false);
+    final fetchedProduct = await productManager.fetchProduct(product.id);
+
+    if (fetchedProduct == null) {
+      _showMessage('Sản phẩm không hợp lệ, vui lòng thử lại sau ít phút');
+      return;
+    }
+
+    if (fetchedProduct.count <= 0) {
+      _showMessage('Sản phẩm ${fetchedProduct.name} không còn hàng');
+      return;
+    }
+
+    final cartManager = Provider.of<CartManager>(context, listen: false);
+    await cartManager.fetchCartsByUserIdAndStoreId(userId, product.storeid);
+    final carts = cartManager.carts;
+
+    final existingCart = carts.firstWhere(
+      (cart) => cart.productid == product.id,
+      orElse: () => Cart(
+        id: "", // Tạo id tạm thời, có thể thay đổi theo yêu cầu của bạn
+        userid: userId,
+        productid: product.id,
+        count: 1,
+        note: '',
+        discount: 0,
+        storeid: product.storeid,
+        state: '1',
+      ),
+    );
+
+    if (existingCart.id == "") {
+      await cartManager.addCart(
+        Cart(
+          id: "", // Tạo id tạm thời, có thể thay đổi theo yêu cầu của bạn
+          userid: userId,
+          productid: product.id,
+          count: 1,
+          note: '',
+          discount: 0,
+          storeid: product.storeid,
+          state: '1',
+        ),
+      );
+    } else {
+      await cartManager.updateCart(
+        existingCart.copyWith(count: existingCart.count + 1),
+      );
+    }
+    productManager.updateProduct(
+      fetchedProduct.copyWith(count: fetchedProduct.count - 1),
+    );
+    _showMessage('Đã thêm sản phẩm vào giỏ hàng');
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -134,10 +207,48 @@ class _ProductScreenState extends State<ProductScreen> {
                             }),
                           ),
                         ),
+                        Positioned(
+                          top: 10,
+                          left: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Builder(
+                              builder: (BuildContext context) {
+                                final currentDate = DateTime.now();
+                                final productDate =
+                                    DateTime.parse(product.day!);
+                                final endDate =
+                                    productDate.add(const Duration(days: 7));
+                                if (currentDate.isAfter(productDate) &&
+                                    currentDate.isBefore(endDate)) {
+                                  return const Text(
+                                    'NEW',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  );
+                                } else {
+                                  return const SizedBox.shrink();
+                                }
+                              },
+                            ),
+                          ),
+                        ),
                         if (product.discount > 0)
                           Positioned(
                             top: 10,
-                            left: 10,
+                            left: product.day != null &&
+                                    DateTime.now().isBefore(
+                                        DateTime.parse(product.day!)
+                                            .add(const Duration(days: 7)))
+                                ? 70
+                                : 10,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
@@ -181,6 +292,13 @@ class _ProductScreenState extends State<ProductScreen> {
                                       16,
                                       FontWeight.normal,
                                     ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.shopping_cart,
+                                      color: Colors.blue,
+                                    ),
+                                    onPressed: () => _addToCart(product),
                                   ),
                                 ],
                               ),

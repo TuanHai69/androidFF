@@ -22,7 +22,6 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
   bool _isFetching = false;
   bool _isLiked = false;
   String? _userId;
-  CommentStore? _currentComment;
 
   @override
   void initState() {
@@ -62,11 +61,14 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
     });
     final commentStoreManager =
         Provider.of<CommentStoreManager>(context, listen: false);
-    final comments = await commentStoreManager.isLiked(userId, widget.store.id);
+    await commentStoreManager.fetchCommentStoresByUser(userId);
+    final comments = commentStoreManager.commentStores.where((comment) {
+      return comment.storeid == widget.store.id;
+    }).toList();
+
     if (comments.isNotEmpty) {
       final currentComment = comments.first;
       setState(() {
-        _currentComment = currentComment;
         _isLiked = currentComment.isliked;
       });
     }
@@ -78,37 +80,49 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
     }
     final commentStoreManager =
         Provider.of<CommentStoreManager>(context, listen: false);
+
+    await commentStoreManager.fetchCommentStoresByUser(_userId!);
+    final comments = commentStoreManager.commentStores.where((comment) {
+      return comment.storeid == widget.store.id;
+    }).toList();
+
     if (_isLiked) {
-      // Nếu đã theo dõi, cập nhật thành chưa theo dõi
-      final updatedComment = await commentStoreManager.updateCommentStore(
-        _currentComment!.copyWith(isliked: false),
-      );
-      if (updatedComment) {
-        setState(() {
-          _isLiked = false;
-        });
+      if (comments.isNotEmpty) {
+        final updatedComment = await commentStoreManager.updateCommentStore(
+          comments.first.copyWith(isliked: false),
+        );
+        if (updatedComment) {
+          setState(() {
+            _isLiked = false;
+          });
+        }
       }
     } else {
       // Nếu chưa theo dõi, thêm vào danh sách theo dõi
-      final newComment = _currentComment != null
-          ? await commentStoreManager.updateCommentStore(
-              _currentComment!.copyWith(isliked: true),
-            )
-          : await commentStoreManager.addCommentStore(
-              CommentStore(
-                id: _userId!,
-                userid: _userId!,
-                storeid: widget.store.id,
-                rate: 0,
-                commentstore: '',
-                state: 'Nopay',
-                isliked: true,
-              ),
-            );
+      if (comments.isEmpty) {
+        // Nếu không có commentstore nào, thêm mới
+        await commentStoreManager.addCommentStore(
+          CommentStore(
+            id: _userId!,
+            userid: _userId!,
+            storeid: widget.store.id,
+            rate: 0,
+            commentstore: '',
+            state: 'Nopay',
+            isliked: true,
+          ),
+        );
+      } else {
+        // Nếu có commentstore, cập nhật
+        await commentStoreManager.updateCommentStore(
+          comments.first.copyWith(isliked: true),
+        );
+      }
       setState(() {
         _isLiked = true;
       });
     }
+    await commentStoreManager.fetchCommentStoresByStore(widget.store.id);
   }
 
   @override
