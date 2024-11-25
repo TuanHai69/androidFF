@@ -96,6 +96,26 @@ class CommentStoreService {
     return null;
   }
 
+  Future<List<CommentStore>> isLiked(String userid, String storeid) async {
+    List<CommentStore> commentStores = [];
+    try {
+      final response =
+          await http.get(Uri.parse('$baseUrl/liked/$userid/$storeid'));
+      if (response.statusCode == 200) {
+        final commentStoreList = json.decode(response.body) as List<dynamic>;
+        commentStores = commentStoreList
+            .map((commentStore) => CommentStore.fromJson(commentStore))
+            .toList();
+      } else {
+        print(
+            'Failed to check if comment store is liked: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error checking if comment store is liked: $error');
+    }
+    return commentStores;
+  }
+
   Future<bool> updateCommentStore(CommentStore commentStore) async {
     try {
       final response = await http.put(

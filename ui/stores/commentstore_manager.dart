@@ -27,6 +27,13 @@ class CommentStoreManager with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<List<CommentStore>> isLiked(String userid, String storeid) async {
+    List<CommentStore> commentStores =
+        await _commentStoreService.isLiked(userid, storeid);
+    notifyListeners();
+    return commentStores;
+  }
+
   Future<void> fetchCommentStoresByStore(String storeid) async {
     _commentStores =
         await _commentStoreService.fetchCommentStoresByStore(storeid);

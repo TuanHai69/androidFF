@@ -87,6 +87,22 @@ class CartService {
     return carts;
   }
 
+  Future<List<Cart>> fetchCartsByOrderId(String orderid) async {
+    List<Cart> carts = [];
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/order/$orderid'));
+      if (response.statusCode == 200) {
+        final cartList = json.decode(response.body) as List<dynamic>;
+        carts = cartList.map((cart) => Cart.fromJson(cart)).toList();
+      } else {
+        print('Failed to load carts by order: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error fetching carts by order: $error');
+    }
+    return carts;
+  }
+
   Future<Cart?> addCart(Cart cart) async {
     try {
       final response = await http.post(

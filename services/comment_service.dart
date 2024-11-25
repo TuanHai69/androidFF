@@ -122,4 +122,22 @@ class CommentService {
     }
     return false;
   }
+
+  Future<List<Comment>> isLiked(String userid, String productid) async {
+    List<Comment> comments = [];
+    try {
+      final response =
+          await http.get(Uri.parse('$baseUrl/liked/$userid/$productid'));
+      if (response.statusCode == 200) {
+        final commentList = json.decode(response.body) as List<dynamic>;
+        comments =
+            commentList.map((comment) => Comment.fromJson(comment)).toList();
+      } else {
+        print('Failed to check if comment is liked: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error checking if comment is liked: $error');
+    }
+    return comments;
+  }
 }

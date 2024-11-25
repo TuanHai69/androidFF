@@ -12,6 +12,7 @@ class Product {
   final String storeid;
   final String state;
   final int count;
+  final String? day; // Thêm thuộc tính mới, có thể null
 
   Product({
     required this.id,
@@ -27,6 +28,7 @@ class Product {
     required this.storeid,
     required this.state,
     required this.count,
+    this.day, // Thêm thuộc tính mới
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,7 @@ class Product {
       storeid: json['storeid'],
       state: json['state'],
       count: _parseInt(json['count']),
+      day: json['day'], // Thêm thuộc tính mới
     );
   }
 
@@ -62,6 +65,7 @@ class Product {
       'storeid': storeid,
       'state': state,
       'count': count,
+      'day': day, // Thêm thuộc tính mới
     };
   }
 
@@ -79,6 +83,7 @@ class Product {
     String? storeid,
     String? state,
     int? count,
+    String? day, // Thêm thuộc tính mới
   }) {
     return Product(
       id: id ?? this.id,
@@ -94,6 +99,7 @@ class Product {
       storeid: storeid ?? this.storeid,
       state: state ?? this.state,
       count: count ?? this.count,
+      day: day ?? this.day, // Thêm thuộc tính mới
     );
   }
 

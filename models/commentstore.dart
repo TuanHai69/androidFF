@@ -7,6 +7,7 @@ class CommentStore {
   final String state;
   final String? name;
   final String? picture;
+  final bool isliked; // Thêm thuộc tính mới
 
   CommentStore({
     required this.id,
@@ -17,6 +18,7 @@ class CommentStore {
     required this.state,
     this.name,
     this.picture,
+    required this.isliked, // Thêm thuộc tính mới
   });
 
   factory CommentStore.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,8 @@ class CommentStore {
       state: json['state'],
       name: json['name'],
       picture: json['picture'],
+      isliked: json['like'] ??
+          false, // Thêm thuộc tính mới, giá trị mặc định là false
     );
   }
 
@@ -42,6 +46,7 @@ class CommentStore {
       'state': state,
       'name': name,
       'picture': picture,
+      'like': isliked, // Thêm thuộc tính mới
     };
   }
 
@@ -54,6 +59,7 @@ class CommentStore {
     String? state,
     String? name,
     String? picture,
+    bool? isliked, // Thêm thuộc tính mới
   }) {
     return CommentStore(
       id: id ?? this.id,
@@ -64,6 +70,7 @@ class CommentStore {
       state: state ?? this.state,
       name: name ?? this.name,
       picture: picture ?? this.picture,
+      isliked: isliked ?? this.isliked, // Thêm thuộc tính mới
     );
   }
 

@@ -26,6 +26,12 @@ class CommentManager with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<List<Comment>> isLiked(String userid, String productid) async {
+    List<Comment> comments = await _commentService.isLiked(userid, productid);
+    notifyListeners();
+    return comments;
+  }
+
   Future<void> fetchCommentsByProduct(String productid) async {
     _comments = await _commentService.fetchCommentsByProduct(productid);
     for (var i = 0; i < _comments.length; i++) {

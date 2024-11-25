@@ -7,6 +7,7 @@ class Comment {
   final String state;
   final String? name; // Nullable
   final String? picture; // Nullable
+  final bool islike;
 
   Comment({
     required this.id,
@@ -17,6 +18,7 @@ class Comment {
     required this.state,
     this.name,
     this.picture,
+    required this.islike,
   });
 
   factory Comment.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class Comment {
       state: json['state'],
       name: json['name'],
       picture: json['picture'],
+      islike: json['islike'] ?? false,
     );
   }
 
@@ -42,6 +45,7 @@ class Comment {
       'state': state,
       'name': name,
       'picture': picture,
+      'islike': islike,
     };
   }
 
@@ -54,6 +58,7 @@ class Comment {
     String? state,
     String? name,
     String? picture,
+    bool? islike,
   }) {
     return Comment(
       id: id ?? this.id,
@@ -64,6 +69,7 @@ class Comment {
       state: state ?? this.state,
       name: name ?? this.name,
       picture: picture ?? this.picture,
+      islike: islike ?? this.islike,
     );
   }
 

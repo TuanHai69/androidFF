@@ -28,8 +28,12 @@ class _CommentStoreCardState extends State<CommentStoreCard> {
   @override
   Widget build(BuildContext context) {
     final commentStoreManager = Provider.of<CommentStoreManager>(context);
+    // Lọc các commentstore có state là "show"
+    final visibleComments = commentStoreManager.commentStores.where((comment) {
+      return comment.state == "show";
+    }).toList();
 
-    if (commentStoreManager.commentStoreCount == 0) {
+    if (visibleComments.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(16.0),
         child: Center(
@@ -44,9 +48,9 @@ class _CommentStoreCardState extends State<CommentStoreCard> {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: commentStoreManager.commentStoreCount,
+      itemCount: visibleComments.length,
       itemBuilder: (context, index) {
-        final commentStore = commentStoreManager.commentStores[index];
+        final commentStore = visibleComments[index];
         final name = commentStore.name ?? 'Người dùng chưa đặt tên';
         final picture = commentStore.picture;
 

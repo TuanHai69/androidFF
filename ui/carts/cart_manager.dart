@@ -37,6 +37,11 @@ class CartManager with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> fetchCartsByOrderId(String orderid) async {
+    _carts = await _cartService.fetchCartsByOrderId(orderid);
+    notifyListeners();
+  }
+
   int get cartCount {
     return _carts.length;
   }
