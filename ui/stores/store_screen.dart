@@ -5,6 +5,7 @@ import 'package:marquee/marquee.dart';
 import 'store_manager.dart';
 import 'store_detail.dart'; // Import StoreDetailScreen
 import 'commentstore_manager.dart'; // Import CommentStoreManager
+import '../../models/store.dart';
 
 class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key});
@@ -16,6 +17,9 @@ class StoreScreen extends StatefulWidget {
 class _StoreScreenState extends State<StoreScreen> {
   final Map<String, double> _averageRatings = {};
   bool _isFetching = false;
+  List<Store> _filteredStores = [];
+  List<Store> _originalStores = [];
+  TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -26,7 +30,28 @@ class _StoreScreenState extends State<StoreScreen> {
   Future<void> _fetchStores() async {
     final storeManager = Provider.of<StoreManager>(context, listen: false);
     await storeManager.fetchAllStores();
+    _filterStores(storeManager.stores);
     _fetchCommentsForStores();
+  }
+
+  void _filterStores(List<Store> stores) {
+    setState(() {
+      _originalStores = stores.where((store) => store.state == 'show').toList();
+      _filteredStores = List.from(_originalStores);
+    });
+  }
+
+  void _searchStores(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredStores = List.from(_originalStores);
+      } else {
+        _filteredStores = _originalStores
+            .where((store) =>
+                store.name.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      }
+    });
   }
 
   Future<void> _fetchCommentsForStores() async {
@@ -35,11 +60,12 @@ class _StoreScreenState extends State<StoreScreen> {
 
     final commentStoreManager =
         Provider.of<CommentStoreManager>(context, listen: false);
-    final storeManager = Provider.of<StoreManager>(context, listen: false);
 
-    for (var store in storeManager.stores) {
+    for (var store in _filteredStores) {
       if (!mounted) return;
       await commentStoreManager.fetchCommentStoresByStore(store.id);
+      if (!mounted) return;
+
       final comments = commentStoreManager.commentStores;
 
       if (comments.isNotEmpty) {
@@ -60,12 +86,17 @@ class _StoreScreenState extends State<StoreScreen> {
       }
     }
 
-    _isFetching = false;
+    if (mounted) {
+      setState(() {
+        _isFetching = false;
+      });
+    }
   }
 
   @override
   void dispose() {
     _isFetching = false;
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -77,109 +108,144 @@ class _StoreScreenState extends State<StoreScreen> {
       appBar: AppBar(
         title: const Text('Danh sách cửa hàng'),
       ),
-      body: storeManager.storeCount == 0
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: storeManager.storeCount,
-              itemBuilder: (context, index) {
-                final store = storeManager.stores[index];
-                final averageRating = _averageRatings[store.id] ?? 0.0;
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Tìm kiếm cửa hàng...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _searchController.clear();
+                            _filteredStores = List.from(_originalStores);
+                          });
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onChanged: (query) => _searchStores(query),
+            ),
+          ),
+          Expanded(
+            child: storeManager.storeCount == 0
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: _filteredStores.length,
+                    itemBuilder: (context, index) {
+                      final store = _filteredStores[index];
+                      final averageRating = _averageRatings[store.id] ?? 0.0;
 
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => StoreDetailScreen(store: store),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 15),
-                    child: Stack(
-                      children: [
-                        Container(
-                          height: MediaQuery.of(context).size.height / 3,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            image: DecorationImage(
-                              image: MemoryImage(base64Decode(store.picture)),
-                              fit: BoxFit.cover,
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  StoreDetailScreen(store: store),
                             ),
-                          ),
-                        ),
-                        Container(
-                          height: MediaQuery.of(context).size.height / 3,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: [
-                                Colors.black.withOpacity(0.7),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 10,
-                          right: 10,
-                          child: Row(
-                            children: List.generate(5, (index) {
-                              if (index < averageRating.floor()) {
-                                return const Icon(Icons.star,
-                                    color: Colors.amber, size: 20);
-                              } else if (index < averageRating) {
-                                return const Icon(Icons.star_half,
-                                    color: Colors.amber, size: 20);
-                              } else {
-                                return const Icon(Icons.star_border,
-                                    color: Colors.amber, size: 20);
-                              }
-                            }),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 10,
-                          left: 10,
-                          right: 10,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 15),
+                          child: Stack(
                             children: [
-                              _buildMarqueeOrText(
-                                  store.name, 24, FontWeight.bold),
-                              const SizedBox(height: 5),
-                              _buildMarqueeOrText(
-                                  store.address, 16, FontWeight.normal),
-                              const SizedBox(height: 5),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: _buildMarqueeOrText(
-                                        store.phonenumber,
-                                        16,
-                                        FontWeight.normal),
+                              Container(
+                                height: MediaQuery.of(context).size.height / 3,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  image: DecorationImage(
+                                    image: MemoryImage(
+                                        base64Decode(store.picture)),
+                                    fit: BoxFit.cover,
                                   ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: _buildMarqueeOrText(
-                                        store.opentime, 16, FontWeight.normal),
+                                ),
+                              ),
+                              Container(
+                                height: MediaQuery.of(context).size.height / 3,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [
+                                      Colors.black.withOpacity(0.7),
+                                      Colors.transparent,
+                                    ],
                                   ),
-                                ],
+                                ),
+                              ),
+                              Positioned(
+                                top: 10,
+                                right: 10,
+                                child: Row(
+                                  children: List.generate(5, (index) {
+                                    if (index < averageRating.floor()) {
+                                      return const Icon(Icons.star,
+                                          color: Colors.amber, size: 20);
+                                    } else if (index < averageRating) {
+                                      return const Icon(Icons.star_half,
+                                          color: Colors.amber, size: 20);
+                                    } else {
+                                      return const Icon(Icons.star_border,
+                                          color: Colors.amber, size: 20);
+                                    }
+                                  }),
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 10,
+                                left: 10,
+                                right: 10,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildMarqueeOrText(
+                                        store.name, 24, FontWeight.bold),
+                                    const SizedBox(height: 5),
+                                    _buildMarqueeOrText(
+                                        store.address, 16, FontWeight.normal),
+                                    const SizedBox(height: 5),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: _buildMarqueeOrText(
+                                              store.phonenumber,
+                                              16,
+                                              FontWeight.normal),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: _buildMarqueeOrText(
+                                              store.opentime,
+                                              16,
+                                              FontWeight.normal),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/ui/order/order_manager.dart';
 import 'package:flutter_application_1/ui/products/comment_manager.dart';
 import 'ui/stores/commentstore_manager.dart';
 import 'package:provider/provider.dart';
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => CartManager()),
         ChangeNotifierProvider(create: (context) => CommentStoreManager()),
         ChangeNotifierProvider(create: (context) => CommentManager()),
+        ChangeNotifierProvider(create: (context) => OrderManager()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

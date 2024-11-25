@@ -1,8 +1,8 @@
 class Order {
   final String id;
   final String userid;
-  final double price;
-  final String note;
+  final int price;
+  final String? note; // Cập nhật kiểu dữ liệu cho phép null
   final String storeid;
   final DateTime date;
   final String state;
@@ -11,7 +11,7 @@ class Order {
     required this.id,
     required this.userid,
     required this.price,
-    required this.note,
+    this.note, // Cập nhật kiểu dữ liệu cho phép null
     required this.storeid,
     required this.date,
     required this.state,
@@ -19,13 +19,13 @@ class Order {
 
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
-      id: json['_id'],
-      userid: json['userid'],
-      price: json['price'],
-      note: json['note'],
-      storeid: json['storeid'],
+      id: json['_id'] ?? '',
+      userid: json['userid'] ?? '',
+      price: json['price'] is int ? json['price'] : int.parse(json['price']),
+      note: json['note'], // Cho phép giá trị null
+      storeid: json['storeid'] ?? '',
       date: DateTime.parse(json['date']),
-      state: json['state'],
+      state: json['state'] ?? '',
     );
   }
 
@@ -34,7 +34,7 @@ class Order {
       '_id': id,
       'userid': userid,
       'price': price,
-      'note': note,
+      'note': note, // Cho phép giá trị null
       'storeid': storeid,
       'date': date.toIso8601String(),
       'state': state,
@@ -44,7 +44,7 @@ class Order {
   Order copyWith({
     String? id,
     String? userid,
-    double? price,
+    int? price,
     String? note,
     String? storeid,
     DateTime? date,

@@ -105,11 +105,9 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
                 isliked: true,
               ),
             );
-      if (newComment != null) {
-        setState(() {
-          _isLiked = true;
-        });
-      }
+      setState(() {
+        _isLiked = true;
+      });
     }
   }
 
@@ -201,19 +199,19 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text('Danh sách sản phẩm',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            ),
-            StoreProductListScreen(
-                storeId: widget.store.id), // Use StoreProductListScreen
+            // Use StoreProductListScreen
             const Padding(
               padding: EdgeInsets.all(16.0),
               child: Text('Đánh giá cửa hàng',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             ),
             CommentStoreCard(storeId: widget.store.id), // Use CommentStoreCard
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text('Danh sách sản phẩm',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            ),
+            StoreProductListScreen(storeId: widget.store.id),
           ],
         ),
       ),

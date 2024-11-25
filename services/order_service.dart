@@ -6,86 +6,24 @@ class OrderService {
   static const String baseUrl = 'http://192.168.56.1:3000/api/order';
 
   Future<Order?> fetchOrder(String id) async {
-    try {
-      final response = await http.get(Uri.parse('$baseUrl/$id'));
-
-      if (response.statusCode == 200) {
-        final orderMap = json.decode(response.body) as Map<String, dynamic>;
-        return Order.fromJson(orderMap);
-      } else {
-        print('Failed to load order: ${response.statusCode}');
-      }
-    } catch (error) {
-      print('Error fetching order: $error');
-    }
-    return null;
+    return _handleGetRequest('$baseUrl/$id');
   }
 
   Future<List<Order>> fetchAllOrders() async {
-    List<Order> orders = [];
-    try {
-      final response = await http.get(Uri.parse(baseUrl));
-      if (response.statusCode == 200) {
-        final orderList = json.decode(response.body) as List<dynamic>;
-        orders = orderList.map((order) => Order.fromJson(order)).toList();
-      } else {
-        print('Failed to load orders: ${response.statusCode}');
-      }
-    } catch (error) {
-      print('Error fetching orders: $error');
-    }
-    return orders;
+    return _handleGetListRequest(baseUrl);
   }
 
   Future<List<Order>> fetchOrdersByUser(String userid) async {
-    List<Order> orders = [];
-    try {
-      final response = await http.get(Uri.parse('$baseUrl/user/$userid'));
-      if (response.statusCode == 200) {
-        final orderList = json.decode(response.body) as List<dynamic>;
-        orders = orderList.map((order) => Order.fromJson(order)).toList();
-      } else {
-        print('Failed to load orders by user: ${response.statusCode}');
-      }
-    } catch (error) {
-      print('Error fetching orders by user: $error');
-    }
-    return orders;
+    return _handleGetListRequest('$baseUrl/user/$userid');
   }
 
   Future<List<Order>> fetchOrdersByStore(String storeid) async {
-    List<Order> orders = [];
-    try {
-      final response = await http.get(Uri.parse('$baseUrl/store/$storeid'));
-      if (response.statusCode == 200) {
-        final orderList = json.decode(response.body) as List<dynamic>;
-        orders = orderList.map((order) => Order.fromJson(order)).toList();
-      } else {
-        print('Failed to load orders by store: ${response.statusCode}');
-      }
-    } catch (error) {
-      print('Error fetching orders by store: $error');
-    }
-    return orders;
+    return _handleGetListRequest('$baseUrl/store/$storeid');
   }
 
   Future<List<Order>> fetchOrdersByUserIdAndStoreId(
       String userid, String storeid) async {
-    List<Order> orders = [];
-    try {
-      final response =
-          await http.get(Uri.parse('$baseUrl/user/$userid/store/$storeid'));
-      if (response.statusCode == 200) {
-        final orderList = json.decode(response.body) as List<dynamic>;
-        orders = orderList.map((order) => Order.fromJson(order)).toList();
-      } else {
-        print(
-            'Failed to load orders by user and store: ${response.statusCode}');
-      }
-    } catch (error) {
-      print('Error fetching orders by user and store: $error');
-    }
-    return orders;
+    return _handleGetListRequest('$baseUrl/user/$userid/store/$storeid');
   }
 
   Future<Order?> addOrder(Order order) async {
@@ -137,5 +75,36 @@ class OrderService {
       print('Error deleting order: $error');
     }
     return false;
+  }
+
+  Future<Order?> _handleGetRequest(String url) async {
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final orderMap = json.decode(response.body) as Map<String, dynamic>;
+        return Order.fromJson(orderMap);
+      } else {
+        print('Failed to load order: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error fetching order: $error');
+    }
+    return null;
+  }
+
+  Future<List<Order>> _handleGetListRequest(String url) async {
+    List<Order> orders = [];
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final orderList = json.decode(response.body) as List<dynamic>;
+        orders = orderList.map((order) => Order.fromJson(order)).toList();
+      } else {
+        print('Failed to load orders: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error fetching orders: $error');
+    }
+    return orders;
   }
 }

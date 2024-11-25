@@ -153,15 +153,17 @@ class _EditInformationScreenState extends State<EditInformationScreen> {
 
   Widget _buildGenderField(
       String label, String initialValue, Function(String) onSaved) {
+    List<String> genderOptions = ['Nam', 'Nữ'];
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: DropdownButtonFormField<String>(
-        value: initialValue.isNotEmpty ? initialValue : null,
+        value: genderOptions.contains(initialValue) ? initialValue : null,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
         ),
-        items: ['Nam', 'Nữ'].map((String value) {
+        items: genderOptions.map((String value) {
           return DropdownMenuItem<String>(
             value: value,
             child: Text(value),
@@ -181,4 +183,35 @@ class _EditInformationScreenState extends State<EditInformationScreen> {
       ),
     );
   }
+
+  // Widget _buildGenderField(
+  //     String label, String initialValue, Function(String) onSaved) {
+  //   return Padding(
+  //     padding: const EdgeInsets.symmetric(vertical: 8.0),
+  //     child: DropdownButtonFormField<String>(
+  //       value: initialValue.isNotEmpty ? initialValue : null,
+  //       decoration: InputDecoration(
+  //         labelText: label,
+  //         border: const OutlineInputBorder(),
+  //       ),
+  //       items: ['Nam', 'Nữ'].map((String value) {
+  //         return DropdownMenuItem<String>(
+  //           value: value,
+  //           child: Text(value),
+  //         );
+  //       }).toList(),
+  //       onChanged: (value) {
+  //         if (value != null) {
+  //           onSaved(value);
+  //         }
+  //       },
+  //       validator: (value) {
+  //         if (value == null || value.isEmpty) {
+  //           return 'Vui lòng chọn $label';
+  //         }
+  //         return null;
+  //       },
+  //     ),
+  //   );
+  // }
 }
