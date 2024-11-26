@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/cart.dart';
+import '../../models/comment.dart';
 import '../../models/product.dart';
 import '../carts/cart_manager.dart';
 import 'comment_card.dart';
+import 'comment_manager.dart';
 import 'product_manager.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -104,17 +106,114 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     _showMessage('Đã thêm sản phẩm vào giỏ hàng');
   }
 
+  Future<double> _calculateAverageRating() async {
+    final commentManager = Provider.of<CommentManager>(context, listen: false);
+    await commentManager.fetchCommentsByProduct(widget.product.id);
+    final comments =
+        commentManager.comments.where((comment) => comment.rate != 0).toList();
+
+    if (comments.isEmpty) {
+      return 0.0;
+    }
+
+    final totalRate = comments.fold(0, (sum, comment) => sum + comment.rate);
+    return totalRate / comments.length;
+  }
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
   }
 
+  bool _isFavorite = false;
+
+  Future<void> _checkFavoriteStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
+    if (userId == null) return;
+    final commentManager = Provider.of<CommentManager>(context, listen: false);
+    await commentManager.fetchCommentsByUser(userId);
+    final userComments = commentManager.comments;
+    final favoriteComment = userComments.firstWhere(
+      (comment) => comment.productid == widget.product.id,
+      orElse: () => Comment(
+          id: "",
+          userid: userId,
+          productid: widget.product.id,
+          rate: 0,
+          comment: "",
+          state: "Nopay",
+          islike: true),
+    );
+    if (favoriteComment.id != "") {
+      setState(() {
+        _isFavorite = favoriteComment.islike;
+      });
+    }
+  }
+
+  Future<void> _toggleFavoriteStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
+    if (userId == null) return;
+    final commentManager = Provider.of<CommentManager>(context, listen: false);
+    await commentManager.fetchCommentsByUser(userId);
+    final userComments = commentManager.comments;
+    final favoriteComment = userComments.firstWhere(
+      (comment) => comment.productid == widget.product.id,
+      orElse: () => Comment(
+          id: "",
+          userid: userId,
+          productid: widget.product.id,
+          rate: 0,
+          comment: "",
+          state: "Nopay",
+          islike: true),
+    );
+    if (favoriteComment.id != "") {
+      final updatedComment =
+          favoriteComment.copyWith(islike: !favoriteComment.islike);
+      await commentManager.updateComment(updatedComment);
+      setState(() {
+        _isFavorite = updatedComment.islike;
+      });
+    } else {
+      await commentManager.addComment(favoriteComment);
+      setState(() {
+        _isFavorite = true;
+      });
+    }
+    await commentManager.fetchCommentsByProduct(widget.product.id);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFavoriteStatus();
+    _calculateAverageRating().then((value) {
+      setState(() {
+        _averageRating = value;
+      });
+    });
+  }
+
+  double _averageRating = 0.0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.product.name),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: _isFavorite ? Colors.red : Colors.red,
+            ),
+            onPressed: _toggleFavoriteStatus,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -267,6 +366,26 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Đánh giá:',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 5),
+                        Row(
+                          children: List.generate(5, (index) {
+                            return Icon(
+                              index < _averageRating
+                                  ? Icons.star
+                                  : Icons.star_border,
+                              color: Colors.amber,
+                            );
+                          }),
+                        ),
+                      ],
+                    ),
                     Text('Nguyên liệu: ${widget.product.material}',
                         style: const TextStyle(fontSize: 18)),
                     const SizedBox(height: 10),

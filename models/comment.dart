@@ -31,7 +31,7 @@ class Comment {
       state: json['state'],
       name: json['name'],
       picture: json['picture'],
-      islike: json['islike'] ?? false,
+      islike: json['like'] ?? false,
     );
   }
 
@@ -45,7 +45,7 @@ class Comment {
       'state': state,
       'name': name,
       'picture': picture,
-      'islike': islike,
+      'like': islike,
     };
   }
 

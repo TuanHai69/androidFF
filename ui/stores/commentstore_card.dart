@@ -28,8 +28,8 @@ class _CommentStoreCardState extends State<CommentStoreCard> {
   void initState() {
     super.initState();
     _checkConditions();
-    // _fetchUserComments();
-    // _fetchComments();
+// _fetchUserComments();
+// _fetchComments();
   }
 
   Future<void> _checkConditions() async {
@@ -108,7 +108,7 @@ class _CommentStoreCardState extends State<CommentStoreCard> {
         Provider.of<CommentStoreManager>(context, listen: false);
 
     if (_existingComment?.id == "") {
-      // Thêm mới commentstore
+// Thêm mới commentstore
       await commentStoreManager.addCommentStore(CommentStore(
         id: '',
         userid: userId,
@@ -119,7 +119,7 @@ class _CommentStoreCardState extends State<CommentStoreCard> {
         isliked: false,
       ));
     } else {
-      // Cập nhật commentstore hiện có
+// Cập nhật commentstore hiện có
       await commentStoreManager.updateCommentStore(_existingComment!.copyWith(
         rate: _rating,
         commentstore: _comment,
@@ -133,7 +133,7 @@ class _CommentStoreCardState extends State<CommentStoreCard> {
   @override
   Widget build(BuildContext context) {
     final commentStoreManager = Provider.of<CommentStoreManager>(context);
-    // Lọc các commentstore có state là "show"
+// Lọc các commentstore có state là "show"
     final visibleComments = commentStoreManager.commentStores.where((comment) {
       return comment.state == "show";
     }).toList();

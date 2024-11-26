@@ -38,7 +38,9 @@ class _ProductScreenState extends State<ProductScreen> {
 
     for (var product in productManager.products) {
       await commentManager.fetchCommentsByProduct(product.id);
-      final comments = commentManager.comments;
+      final comments = commentManager.comments
+          .where((comment) => comment.rate != 0 && comment.rate != '')
+          .toList();
 
       if (comments.isNotEmpty) {
         final averageRating =

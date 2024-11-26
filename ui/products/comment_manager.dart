@@ -33,15 +33,26 @@ class CommentManager with ChangeNotifier {
   }
 
   Future<void> fetchCommentsByProduct(String productid) async {
-    _comments = await _commentService.fetchCommentsByProduct(productid);
-    for (var i = 0; i < _comments.length; i++) {
-      final account = await _accountService.fetchAccount(_comments[i].userid);
-      _comments[i] = _comments[i].copyWith(
-        name: account?.name,
-        picture: account?.picture,
-      );
+    try {
+      _comments = await _commentService.fetchCommentsByProduct(productid);
+
+      if (_comments.isNotEmpty) {
+        for (var i = 0; i < _comments.length; i++) {
+          final account =
+              await _accountService.fetchAccount(_comments[i].userid);
+          if (account != null) {
+            _comments[i] = _comments[i].copyWith(
+              name: account.name,
+              picture: account.picture,
+            );
+          }
+        }
+      }
+    } catch (error) {
+      print('Error fetching comments by product: $error');
+    } finally {
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   int get commentCount {
