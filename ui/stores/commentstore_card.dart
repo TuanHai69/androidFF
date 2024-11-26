@@ -301,8 +301,7 @@ class _CommentStoreCardState extends State<CommentStoreCard> {
                                         const SizedBox(height: 5),
                                         Container(
                                           constraints: const BoxConstraints(
-                                            maxHeight:
-                                                60.0, // Giới hạn chiều cao của Container để chứa tối đa 3 dòng văn bản
+                                            maxHeight: 60.0,
                                           ),
                                           child: SingleChildScrollView(
                                             child: Text(
