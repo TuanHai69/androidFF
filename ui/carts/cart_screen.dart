@@ -8,6 +8,7 @@ import 'cart_manager.dart';
 import '../products/product_manager.dart';
 import '../../models/cart.dart';
 import '../../models/product.dart';
+import 'payment.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -52,7 +53,9 @@ class _CartScreenState extends State<CartScreen> {
       final productManager =
           Provider.of<ProductManager>(context, listen: false);
       await cartManager.fetchCartsByUser(userId);
-      final carts = cartManager.carts;
+      final carts =
+          cartManager.carts.where((cart) => cart.state != 'done').toList();
+
       for (var cart in carts) {
         final product = await productManager.fetchProduct(cart.productid);
         if (product != null) {
@@ -67,6 +70,22 @@ class _CartScreenState extends State<CartScreen> {
     } else {
       setState(() {
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _deleteCartItem(Cart cart) async {
+    final productManager = Provider.of<ProductManager>(context, listen: false);
+    final product = await productManager.fetchProduct(cart.productid);
+
+    if (product != null) {
+      final updatedProduct =
+          product.copyWith(count: product.count + cart.count);
+      await productManager.updateProduct(updatedProduct);
+      final cartManager = Provider.of<CartManager>(context, listen: false);
+      await cartManager.deleteCart(cart.id);
+      setState(() {
+        _carts.remove(cart);
       });
     }
   }
@@ -131,7 +150,7 @@ class _CartScreenState extends State<CartScreen> {
                             top: 10,
                             left: 10,
                             child: SizedBox(
-                              width: MediaQuery.of(context).size.width * 2 / 3,
+                              width: MediaQuery.of(context).size.width * 3 / 3,
                               child: _buildMarqueeOrText(
                                   product.name, 24, FontWeight.bold),
                             ),
@@ -170,7 +189,32 @@ class _CartScreenState extends State<CartScreen> {
                               children: [
                                 ElevatedButton(
                                   onPressed: () {
-                                    // Xử lý thanh toán
+                                    final product = _products[cart.productid];
+
+                                    if (product != null) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => PaymentScreen(
+                                            cart: cart,
+                                            product: product,
+                                            totalPrice: (product.cost -
+                                                    (product.cost *
+                                                        product.discount /
+                                                        100))
+                                                .toInt(),
+                                          ),
+                                        ),
+                                      );
+                                    } else {
+                                      // Hiển thị thông báo lỗi nếu sản phẩm không tìm thấy
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content:
+                                                Text('Sản phẩm không hợp lệ')),
+                                      );
+                                    }
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.blue,
@@ -190,8 +234,35 @@ class _CartScreenState extends State<CartScreen> {
                                 IconButton(
                                   icon: const Icon(Icons.delete,
                                       color: Colors.red),
-                                  onPressed: () {
-                                    // Xử lý xóa sản phẩm khỏi giỏ hàng
+                                  onPressed: () async {
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          title: const Text('Xác nhận'),
+                                          content: const Text(
+                                              'Bạn có muốn xóa sản phẩm này khỏi giỏ hàng không?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(false),
+                                              child: const Text('Không'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(true),
+                                              child: const Text('Có'),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+
+                                    if (confirm == true) {
+                                      _deleteCartItem(cart);
+                                    }
                                   },
                                 ),
                               ],

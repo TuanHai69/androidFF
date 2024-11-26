@@ -19,17 +19,38 @@ class ProductScreen extends StatefulWidget {
 
 class _ProductScreenState extends State<ProductScreen> {
   final Map<String, double> _averageRatings = {};
+  List<Product> _filteredProducts = [];
+  List<Product> _originalProducts = [];
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _fetchProducts();
+    _originalProducts =
+        Provider.of<ProductManager>(context, listen: false).products;
+    _filteredProducts = _originalProducts;
+  }
+
+  void _searchProducts(String query) {
+    final products = _originalProducts.where((product) {
+      final productName = product.name.toLowerCase();
+      final searchQuery = query.toLowerCase();
+      return productName.contains(searchQuery);
+    }).toList();
+    setState(() {
+      _filteredProducts = products;
+    });
   }
 
   Future<void> _fetchProducts() async {
     final productManager = Provider.of<ProductManager>(context, listen: false);
     await productManager.fetchAllProducts();
     _fetchCommentsForProducts();
+    setState(() {
+      _originalProducts = productManager.products;
+      _filteredProducts = _originalProducts;
+    });
   }
 
   Future<void> _fetchCommentsForProducts() async {
@@ -144,175 +165,208 @@ class _ProductScreenState extends State<ProductScreen> {
       appBar: AppBar(
         title: const Text('Danh sách sản phẩm'),
       ),
-      body: productManager.productCount == 0
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: productManager.productCount,
-              itemBuilder: (context, index) {
-                final product = productManager.products[index];
-                final averageRating = _averageRatings[product.id] ?? 0.0;
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Tìm kiếm sản phẩm...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _searchController.clear();
+                            _filteredProducts = List.from(_originalProducts);
+                          });
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onChanged: (query) =>
+                  _searchProducts(query), // CẬP NHẬT: Gọi phương thức tìm kiếm
+            ),
+          ),
+          Expanded(
+            child: productManager.productCount == 0
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: _filteredProducts.length,
+                    itemBuilder: (context, index) {
+                      final product = _filteredProducts[index];
+                      final averageRating = _averageRatings[product.id] ?? 0.0;
 
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ProductDetailScreen(product: product),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 15),
-                    child: Stack(
-                      children: [
-                        Container(
-                          height: MediaQuery.of(context).size.height / 4,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            image: DecorationImage(
-                              image: MemoryImage(base64Decode(product.picture)),
-                              fit: BoxFit.cover,
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  ProductDetailScreen(product: product),
                             ),
-                          ),
-                        ),
-                        Container(
-                          height: MediaQuery.of(context).size.height / 4,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: [
-                                Colors.black.withOpacity(0.7),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 10,
-                          right: 10,
-                          child: Row(
-                            children: List.generate(5, (index) {
-                              if (index < averageRating.floor()) {
-                                return const Icon(Icons.star,
-                                    color: Colors.amber, size: 20);
-                              } else if (index < averageRating) {
-                                return const Icon(Icons.star_half,
-                                    color: Colors.amber, size: 20);
-                              } else {
-                                return const Icon(Icons.star_border,
-                                    color: Colors.amber, size: 20);
-                              }
-                            }),
-                          ),
-                        ),
-                        Positioned(
-                          top: 10,
-                          left: 10,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.green,
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: Builder(
-                              builder: (BuildContext context) {
-                                final currentDate = DateTime.now();
-                                final productDate =
-                                    DateTime.parse(product.day!);
-                                final endDate =
-                                    productDate.add(const Duration(days: 7));
-                                if (currentDate.isAfter(productDate) &&
-                                    currentDate.isBefore(endDate)) {
-                                  return const Text(
-                                    'NEW',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  );
-                                } else {
-                                  return const SizedBox.shrink();
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                        if (product.discount > 0)
-                          Positioned(
-                            top: 10,
-                            left: product.day != null &&
-                                    DateTime.now().isBefore(
-                                        DateTime.parse(product.day!)
-                                            .add(const Duration(days: 7)))
-                                ? 70
-                                : 10,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              child: Text(
-                                '${product.discount}% OFF',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 15),
+                          child: Stack(
+                            children: [
+                              Container(
+                                height: MediaQuery.of(context).size.height / 4,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  image: DecorationImage(
+                                    image: MemoryImage(
+                                        base64Decode(product.picture)),
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                        Positioned(
-                          bottom: 10,
-                          left: 10,
-                          right: 10,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildMarqueeOrText(
-                                  product.name, 24, FontWeight.bold),
-                              const SizedBox(height: 5),
-                              _buildMarqueeOrText(
-                                  product.description, 16, FontWeight.normal),
-                              const SizedBox(height: 5),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: _buildPriceText(product),
+                              Container(
+                                height: MediaQuery.of(context).size.height / 4,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [
+                                      Colors.black.withOpacity(0.7),
+                                      Colors.transparent,
+                                    ],
                                   ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: _buildMarqueeOrText(
-                                      'Số lượng: ${product.count}',
-                                      16,
-                                      FontWeight.normal,
+                                ),
+                              ),
+                              Positioned(
+                                top: 10,
+                                right: 10,
+                                child: Row(
+                                  children: List.generate(5, (index) {
+                                    if (index < averageRating.floor()) {
+                                      return const Icon(Icons.star,
+                                          color: Colors.amber, size: 20);
+                                    } else if (index < averageRating) {
+                                      return const Icon(Icons.star_half,
+                                          color: Colors.amber, size: 20);
+                                    } else {
+                                      return const Icon(Icons.star_border,
+                                          color: Colors.amber, size: 20);
+                                    }
+                                  }),
+                                ),
+                              ),
+                              Positioned(
+                                top: 10,
+                                left: 10,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                  child: Builder(
+                                    builder: (BuildContext context) {
+                                      final currentDate = DateTime.now();
+                                      final productDate =
+                                          DateTime.parse(product.day!);
+                                      final endDate = productDate
+                                          .add(const Duration(days: 7));
+                                      if (currentDate.isAfter(productDate) &&
+                                          currentDate.isBefore(endDate)) {
+                                        return const Text(
+                                          'NEW',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        );
+                                      } else {
+                                        return const SizedBox.shrink();
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                              if (product.discount > 0)
+                                Positioned(
+                                  top: 10,
+                                  left: product.day != null &&
+                                          DateTime.now().isBefore(
+                                              DateTime.parse(product.day!)
+                                                  .add(const Duration(days: 7)))
+                                      ? 70
+                                      : 10,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                    child: Text(
+                                      '${product.discount}% OFF',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.shopping_cart,
-                                      color: Colors.blue,
+                                ),
+                              Positioned(
+                                bottom: 10,
+                                left: 10,
+                                right: 10,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildMarqueeOrText(
+                                        product.name, 24, FontWeight.bold),
+                                    const SizedBox(height: 5),
+                                    _buildMarqueeOrText(product.description, 16,
+                                        FontWeight.normal),
+                                    const SizedBox(height: 5),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: _buildPriceText(product),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: _buildMarqueeOrText(
+                                            'Số lượng: ${product.count}',
+                                            16,
+                                            FontWeight.normal,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.shopping_cart,
+                                            color: Colors.blue,
+                                          ),
+                                          onPressed: () => _addToCart(product),
+                                        ),
+                                      ],
                                     ),
-                                    onPressed: () => _addToCart(product),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
+          ),
+        ],
+      ),
     );
   }
 
