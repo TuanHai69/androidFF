@@ -9,7 +9,7 @@ class HomePageState extends ChangeNotifier {
   int _selectedIndex = 0;
 
   static final _pages = <Widget>[
-    const StoreScreen(), // Thay thế LoginPage bằng StoreScreen
+    const StoreScreen(),
     const ProductScreen(),
     const CartScreen(),
     const AccountScreen(),

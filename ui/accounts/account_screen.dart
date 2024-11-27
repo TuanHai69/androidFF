@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../order/order_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'account_manager.dart';
@@ -108,6 +109,14 @@ class _AccountScreenState extends State<AccountScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
+                      _buildActionButton('Đơn hàng', Icons.task_alt, () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const OrderScreen(),
+                          ),
+                        );
+                      }),
                       _buildActionButton('Đổi mật khẩu', Icons.lock, () {
                         Navigator.push(
                           context,
