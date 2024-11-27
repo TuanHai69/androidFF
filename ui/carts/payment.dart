@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/cart.dart';
+import '../../models/comment.dart';
 import '../../models/order.dart';
 import '../../models/product.dart';
 import '../../models/coded.dart';
@@ -9,13 +12,16 @@ import '../../models/codeuse.dart';
 import '../../services/coded_service.dart';
 import '../../services/codeuse_service.dart';
 import '../order/order_manager.dart';
+import '../products/comment_manager.dart';
+import 'cart_manager.dart';
 
+// ignore: must_be_immutable
 class PaymentScreen extends StatefulWidget {
-  final Cart cart;
+  Cart cart;
   final Product product;
   final int totalPrice;
 
-  const PaymentScreen({
+  PaymentScreen({
     super.key,
     required this.cart,
     required this.product,
@@ -127,6 +133,106 @@ class _PaymentScreenState extends State<PaymentScreen> {
       widget.cart.discount = codeDiscount;
     } else {
       widget.cart.discount = 0.0;
+    }
+  }
+
+  void _confirmPayment() async {
+    // Kiểm tra xem người dùng đã nhập địa chỉ giao hàng và số điện thoại người nhận chưa
+    if (_addressController.text.isEmpty ||
+        _phoneNumberController.text.isEmpty) {
+      // Hiển thị thông báo lỗi nếu thiếu thông tin
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text(
+                'Vui lòng nhập địa chỉ giao hàng và số điện thoại người nhận')),
+      );
+      return;
+    }
+
+    // Tiếp tục xử lý nếu người dùng chọn "Trả khi nhận hàng"
+    if (_paymentMethod == 'Trả khi nhận hàng') {
+      saveDiscount();
+      // Cập nhật thông tin cart
+      widget.cart = widget.cart.copyWith(
+        payment: _paymentMethod,
+        note: _descriptionController.text.isNotEmpty
+            ? _descriptionController.text
+            : "",
+        discount: widget.cart.discount,
+        phonenumber: _phoneNumberController.text,
+        address: _addressController.text,
+        day: DateTime.now().toIso8601String(),
+        orderid: currentOrder?.id,
+        state: "done",
+      );
+      // Cập nhật trạng thái và thông tin order
+      Order updatedOrder = currentOrder!.copyWith(
+        state: 'Chờ xác nhận',
+        date: DateTime.now(),
+        price: currentOrder!.price + finalPrice,
+      );
+      final cartManager = Provider.of<CartManager>(context, listen: false);
+      await cartManager.updateCart(widget.cart);
+      // Gọi dịch vụ cập nhật cart và order
+      await orderManager.updateOrder(updatedOrder);
+      CommentManager commentManager = CommentManager();
+      await commentManager.fetchCommentsByUser(widget.cart.userid);
+      List<Comment> userComments = commentManager.comments;
+      if (userComments.isEmpty) {
+        // Tạo mới comment nếu không có comment nào
+        Comment newComment = Comment(
+          id: "",
+          userid: widget.cart.userid,
+          productid: widget.product.id,
+          rate: 0,
+          comment: "",
+          state: "",
+          islike: false,
+        );
+        await commentManager.addComment(newComment);
+      } else {
+        // Lọc comment và kiểm tra
+        Comment? existingComment = userComments.firstWhereOrNull(
+            (comment) => comment.productid == widget.product.id);
+        if (existingComment == null) {
+          // Tạo mới comment nếu không có comment nào cho productid
+          Comment newComment = Comment(
+            id: "",
+            userid: widget.cart.userid,
+            productid: widget.product.id,
+            rate: 0,
+            comment: "",
+            state: "",
+            islike: false,
+          );
+          await commentManager.addComment(newComment);
+        } else if (existingComment.state == "Nopay") {
+          // Cập nhật comment nếu state là "Nopay"
+          Comment updatedComment = existingComment.copyWith(state: "");
+          await commentManager.updateComment(updatedComment);
+        }
+      }
+
+      if (selectedCoded != null) {
+        // Lấy userId từ SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? userId = prefs.getString('userId'); // Tạo mới CodeUse
+        CodeUse newCodeUse = CodeUse(
+          id: "",
+          userid: userId!,
+          codeid: selectedCoded!.id,
+          day: DateTime.now(),
+        ); // Thêm mới CodeUse
+        CodeUseService codeUseService = CodeUseService();
+        await codeUseService.addCodeUse(newCodeUse);
+      }
+      // Hiển thị thông báo thành công
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Xác nhận thanh toán thành công')),
+      );
+
+      // Điều hướng người dùng tới trang xác nhận hoặc trang khác (tùy chọn)
+      Navigator.pushReplacementNamed(context, '/home');
     }
   }
 
@@ -262,7 +368,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 items: [
                   const DropdownMenuItem<Coded>(
                     value: null,
-                    child: Text('Không chọn mã giảm giá'),
+                    child: Text('Không dùng mã giảm giá'),
                   ),
                   ...availableCodes.map((code) => DropdownMenuItem<Coded>(
                         value: code,
@@ -280,7 +386,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                items: ['Trả khi nhận hàng', 'Chuyển khoản']
+                items: ['Trả khi nhận hàng']
                     .map((method) => DropdownMenuItem(
                           value: method,
                           child: Text(method),
@@ -326,9 +432,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               const SizedBox(height: 20),
               Center(
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Xử lý xác nhận thanh toán
-                  },
+                  onPressed: _confirmPayment,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     padding: const EdgeInsets.symmetric(
