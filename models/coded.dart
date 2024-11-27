@@ -2,7 +2,7 @@ class Coded {
   final String id;
   final String userid;
   final String code;
-  final double percent;
+  final int percent; // Đã cập nhật từ double thành int
   final DateTime start;
   final DateTime end;
   final String state;
@@ -22,7 +22,7 @@ class Coded {
       id: json['_id'],
       userid: json['userid'],
       code: json['code'],
-      percent: json['percent'],
+      percent: json['percent'], // Không cần parse lại vì nó đã là int
       start: DateTime.parse(json['start']),
       end: DateTime.parse(json['end']),
       state: json['state'],
@@ -45,7 +45,7 @@ class Coded {
     String? id,
     String? userid,
     String? code,
-    double? percent,
+    int? percent, // Đã cập nhật từ double thành int
     DateTime? start,
     DateTime? end,
     String? state,
@@ -54,7 +54,7 @@ class Coded {
       id: id ?? this.id,
       userid: userid ?? this.userid,
       code: code ?? this.code,
-      percent: percent ?? this.percent,
+      percent: percent ?? this.percent, // Đã cập nhật từ double thành int
       start: start ?? this.start,
       end: end ?? this.end,
       state: state ?? this.state,

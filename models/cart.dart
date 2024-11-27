@@ -5,7 +5,7 @@ class Cart {
   final int count;
   final String? payment; // có thể null
   final String note;
-  final int discount;
+  double discount; // Thay đổi từ final thành non-final
   final String? phonenumber; // có thể null
   final String? address; // có thể null
   final String? day; // có thể null
@@ -20,7 +20,7 @@ class Cart {
     required this.count,
     this.payment, // có thể null
     required this.note,
-    required this.discount,
+    required this.discount, // Đã chuyển sang kiểu double
     this.phonenumber, // có thể null
     this.address, // có thể null
     this.day, // có thể null
@@ -37,7 +37,8 @@ class Cart {
       count: _parseInt(json['count'] ?? 0),
       payment: json['payment'], // có thể null
       note: json['note'] ?? '',
-      discount: _parseInt(json['discount'] ?? 0),
+      discount:
+          _parseDouble(json['discount'] ?? 0), // Đã chuyển sang kiểu double
       phonenumber: json['phonenumber'], // có thể null
       address: json['address'], // có thể null
       day: json['day'], // có thể null
@@ -55,7 +56,7 @@ class Cart {
       'count': count,
       'payment': payment, // có thể null
       'note': note,
-      'discount': discount,
+      'discount': discount, // Đã chuyển sang kiểu double
       'phonenumber': phonenumber, // có thể null
       'address': address, // có thể null
       'day': day, // có thể null
@@ -72,7 +73,7 @@ class Cart {
     int? count,
     String? payment, // có thể null
     String? note,
-    int? discount,
+    double? discount, // Đã chuyển sang kiểu double
     String? phonenumber, // có thể null
     String? address, // có thể null
     String? day, // có thể null
@@ -87,7 +88,7 @@ class Cart {
       count: count ?? this.count,
       payment: payment ?? this.payment, // có thể null
       note: note ?? this.note,
-      discount: discount ?? this.discount,
+      discount: discount ?? this.discount, // Đã chuyển sang kiểu double
       phonenumber: phonenumber ?? this.phonenumber, // có thể null
       address: address ?? this.address, // có thể null
       day: day ?? this.day, // có thể null
@@ -104,6 +105,18 @@ class Cart {
       return int.tryParse(value) ?? 0;
     } else {
       return 0;
+    }
+  }
+
+  static double _parseDouble(dynamic value) {
+    if (value is double) {
+      return value;
+    } else if (value is String) {
+      return double.tryParse(value) ?? 0.0;
+    } else if (value is int) {
+      return value.toDouble();
+    } else {
+      return 0.0;
     }
   }
 }
