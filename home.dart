@@ -49,7 +49,7 @@ class HomePage extends StatelessWidget {
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.task_sharp),
-                  label: 'Đã đặt hàng',
+                  label: 'giỏ hàng',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.person),
