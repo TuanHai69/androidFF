@@ -170,6 +170,15 @@ class _RegisterPageState extends State<RegisterPage> {
                                   style: const TextStyle(color: Colors.red),
                                 ),
                               ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/login');
+                              },
+                              child: const Text(
+                                'Đã có tài khoản? Đăng nhập',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ),
                           ],
                         ),
                       ),

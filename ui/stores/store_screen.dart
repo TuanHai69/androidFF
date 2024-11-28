@@ -107,6 +107,7 @@ class _StoreScreenState extends State<StoreScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Danh sách cửa hàng'),
+        automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [

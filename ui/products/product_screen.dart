@@ -164,6 +164,7 @@ class _ProductScreenState extends State<ProductScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Danh sách sản phẩm'),
+        automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [

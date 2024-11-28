@@ -128,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                                 Navigator.pushNamed(context, '/register');
                               },
                               child: const Text(
-                                'Don\'t have an account? Register',
+                                'Chưa có tài khoản? Đăng ký',
                                 style: TextStyle(color: Colors.black),
                               ),
                             ),
