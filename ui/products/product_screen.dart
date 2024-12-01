@@ -281,7 +281,7 @@ class _ProductScreenState extends State<ProductScreen> {
                                       if (currentDate.isAfter(productDate) &&
                                           currentDate.isBefore(endDate)) {
                                         return const Text(
-                                          'NEW',
+                                          'Mới',
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
